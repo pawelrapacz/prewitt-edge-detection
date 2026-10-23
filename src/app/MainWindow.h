@@ -3,6 +3,7 @@
 #include <QMainWindow>
 #include <QImage>
 #include <QString>
+#include <QResizeEvent>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -22,6 +23,10 @@ private slots:
     void loadImageFromEditedPath();
     void loadImageFromDialog();
     void startEdgeDetcetion();
+
+private:
+    void drawImage();
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     QImage _image;

@@ -4,6 +4,7 @@
 #include "utils.h"
 
 #include <cimpl.h>
+#include <vector>
 
 #include <QImageReader>
 #include <QImage>
@@ -13,6 +14,7 @@
 #include <QPushButton>
 #include <QString>
 #include <QMessageBox>
+#include <QResizeEvent>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -37,11 +39,9 @@ void MainWindow::loadImage(const QString &path) {
     _image = QImage(path);
 
     _ui->pathEdit->setText(path);
-    _ui->imageLabel->setPixmap(QPixmap::fromImage(_image).scaled(
-        _ui->imageLabel->size(),
-        Qt::KeepAspectRatio
-    ));
+    drawImage();
 }
+
 
 void MainWindow::loadImageFromEditedPath() {
     QFileInfo fileInfo(_ui->pathEdit->text());
@@ -59,10 +59,12 @@ void MainWindow::loadImageFromEditedPath() {
     loadImage(_ui->pathEdit->text());
 }
 
+
 void MainWindow::loadImageFromDialog() {
     QString path = QFileDialog::getOpenFileName(this, "Choose file", "~/","(*.png *.jpg *.jpeg *.bmp)");
     loadImage(path);
 }
+
 
 void MainWindow::startEdgeDetcetion() {
     if (_image.isNull()) {
@@ -75,8 +77,49 @@ void MainWindow::startEdgeDetcetion() {
     int height = _image.height();
 
     QString impl = _ui->implementationPicker->currentText();
-    if (impl == "C++ implementation")
-        cimplDetectEdges(nullptr, width, height, threads);
+    if (impl == "C++ implementation") {
+        QImage gray = _image.convertToFormat(QImage::Format_Grayscale8);
+
+        std::vector<uint8_t> input(
+            static_cast<size_t>(width) * height
+        );
+
+        for (int y = 0; y < height; ++y) {
+            std::memcpy(
+                input.data() + static_cast<size_t>(y) * width,
+                gray.constScanLine(y),
+                static_cast<size_t>(width)
+            );
+        }
+
+        uint8_t* output = cimplDetectEdges(width, height, input.data());
+
+        _image = QImage(
+            output,
+            width,
+            height,
+            width,
+            QImage::Format_Grayscale8
+        );
+
+        drawImage();
+    }
     else // asm
         qWarning() << "call asm implementation!"; // TODO: call asm implementation
+}
+
+
+void MainWindow::drawImage() {
+    if (_image.isNull()) return;
+
+    _ui->imageLabel->setPixmap(QPixmap::fromImage(_image).scaled(
+        _ui->imageLabel->size(),
+        Qt::KeepAspectRatio,
+        Qt::FastTransformation
+    ));
+}
+
+
+void MainWindow::resizeEvent(QResizeEvent *event) {
+    drawImage();
 }

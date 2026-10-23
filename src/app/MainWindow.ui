@@ -61,7 +61,7 @@
         </item>
         <item>
          <property name="text">
-          <string>C++ implementation</string>
+          <string>C implementation</string>
          </property>
         </item>
        </widget>

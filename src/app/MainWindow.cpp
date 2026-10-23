@@ -47,7 +47,7 @@ void MainWindow::loadImageFromEditedPath() {
     QFileInfo fileInfo(_ui->pathEdit->text());
 
     if (not fileInfo.isFile()) {
-        QMessageBox::warning(this, "File not found", fileInfo.path() + " is not a file or does not exist.");
+        QMessageBox::warning(this, "File not found", fileInfo.filePath() + " is not a file or does not exist.");
         return;
     }
 
@@ -76,8 +76,10 @@ void MainWindow::startEdgeDetcetion() {
     int width = _image.width();
     int height = _image.height();
 
-    QString impl = _ui->implementationPicker->currentText();
-    if (impl == "C++ implementation") {
+    if (_ui->implementationPicker->currentIndex() == 0) { // asm implementation
+        qWarning() << "call asm implementation!"; // TODO: call asm implementation
+        
+    } else { // c implementation
         QImage gray = _image.convertToFormat(QImage::Format_Grayscale8);
 
         std::vector<uint8_t> input(
@@ -104,8 +106,6 @@ void MainWindow::startEdgeDetcetion() {
 
         drawImage();
     }
-    else // asm
-        qWarning() << "call asm implementation!"; // TODO: call asm implementation
 }
 
 

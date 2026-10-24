@@ -5,7 +5,7 @@
 #include <math.h>
 
 
-uint8_t* cimplGrayScale(uint32_t width, uint32_t height, const rgb_t* input) {
+uint8_t* cGrayScale(uint32_t width, uint32_t height, const rgb_t* input) {
     if (input == nullptr)
         return nullptr;
 
@@ -14,17 +14,15 @@ uint8_t* cimplGrayScale(uint32_t width, uint32_t height, const rgb_t* input) {
     if (result == nullptr)
         return nullptr;
     
-    for (uint32_t i = 0; i < width; i++) {
-        for (uint32_t j = 0; j < height; j++) {
-            rgb_t pix = input[width * j + i];
-            uint8_t gray = (uint8_t)(0.299f * pix.r + 0.587f * pix.g + 0.114f * pix.b);
-        }
+    for (uint32_t i = 0; i < width * height; i++) {
+        rgb_t pix = input[i];
+        result[i] = (uint8_t)(0.299f * pix.r + 0.587f * pix.g + 0.114f * pix.b);
     }
 
     return result;
 }
 
-uint8_t* cimplDetectEdges(uint32_t width, uint32_t height, const uint8_t* input) {
+uint8_t* cDetectEdges(uint32_t width, uint32_t height, const uint8_t* input) {
     if (input == nullptr)
         return nullptr;
 

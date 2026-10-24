@@ -99,7 +99,7 @@ void MainWindow::startEdgeDetcetion() {
         
     } else { // c implementation
         _timer.start();
-        output = cimplDetectEdges(width, height, input.data());
+        output = cDetectEdges(width, height, input.data());
         auto timeNs = _timer.nsecsElapsed();
         _ui->time->setText(QString("%1")
         .arg(timeNs / 1e6, 0, 'f', 3)

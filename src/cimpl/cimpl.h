@@ -12,9 +12,9 @@ struct rgb_t {
 
 typedef struct rgb_t rgb_t;
 
-uint8_t* cimplGrayScale(uint32_t width, uint32_t height, const rgb_t* input);
+uint8_t* cGrayScale(uint32_t width, uint32_t height, const rgb_t* input);
 
-uint8_t* cimplDetectEdges(uint32_t width, uint32_t height, const uint8_t* input);
+uint8_t* cDetectEdges(uint32_t width, uint32_t height, const uint8_t* input);
 
 #ifdef __cplusplus
 }

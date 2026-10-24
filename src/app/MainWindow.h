@@ -4,6 +4,7 @@
 #include <QImage>
 #include <QString>
 #include <QResizeEvent>
+#include <QElapsedTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -29,6 +30,7 @@ private:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
+    QElapsedTimer _timer;
     QImage _image;
     Ui::MainWindow *_ui = nullptr;
 };

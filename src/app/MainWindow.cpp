@@ -15,6 +15,7 @@
 #include <QString>
 #include <QMessageBox>
 #include <QResizeEvent>
+#include <QElapsedTimer>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -38,6 +39,7 @@ void MainWindow::loadImage(const QString &path) {
 
     _image = QImage(path);
 
+    _ui->imageSize->setText(QString("Image size: %1x%2").arg(_image.width()).arg(_image.height()));
     _ui->pathEdit->setText(path);
     drawImage();
 }
@@ -76,26 +78,36 @@ void MainWindow::startEdgeDetcetion() {
     int width = _image.width();
     int height = _image.height();
 
+    QImage gray = _image.convertToFormat(QImage::Format_Grayscale8);
+
+    std::vector<uint8_t> input(
+        static_cast<size_t>(width) * height
+    );
+
+    for (int y = 0; y < height; ++y) {
+        std::memcpy(
+            input.data() + static_cast<size_t>(y) * width,
+            gray.constScanLine(y),
+            static_cast<size_t>(width)
+        );
+    }
+
+    uint8_t* output = nullptr;
     if (_ui->implementationPicker->currentIndex() == 0) { // asm implementation
         qWarning() << "call asm implementation!"; // TODO: call asm implementation
+        return;
         
     } else { // c implementation
-        QImage gray = _image.convertToFormat(QImage::Format_Grayscale8);
+        _timer.start();
+        output = cimplDetectEdges(width, height, input.data());
+        auto timeNs = _timer.nsecsElapsed();
+        _ui->time->setText(QString("%1")
+        .arg(timeNs / 1e6, 0, 'f', 3)
+);
+    }
 
-        std::vector<uint8_t> input(
-            static_cast<size_t>(width) * height
-        );
 
-        for (int y = 0; y < height; ++y) {
-            std::memcpy(
-                input.data() + static_cast<size_t>(y) * width,
-                gray.constScanLine(y),
-                static_cast<size_t>(width)
-            );
-        }
-
-        uint8_t* output = cimplDetectEdges(width, height, input.data());
-
+    if (output) {
         _image = QImage(
             output,
             width,

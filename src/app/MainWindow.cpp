@@ -3,6 +3,7 @@
 #include "ui_MainWindow.h"
 #include "utils.h"
 
+#include <asmimpl.h>
 #include <cimpl.h>
 #include <vector>
 
@@ -94,16 +95,18 @@ void MainWindow::startEdgeDetcetion() {
 
     uint8_t* output = nullptr;
     if (_ui->implementationPicker->currentIndex() == 0) { // asm implementation
-        qWarning() << "call asm implementation!"; // TODO: call asm implementation
-        return;
+        _timer.start();
+        output = asmDetectEdges(width, height, input.data());
+        auto timeNs = _timer.nsecsElapsed();
+        _ui->time->setText(QString("%1")
+        .arg(timeNs / 1e6, 0, 'f', 3));
         
     } else { // c implementation
         _timer.start();
         output = cDetectEdges(width, height, input.data());
         auto timeNs = _timer.nsecsElapsed();
         _ui->time->setText(QString("%1")
-        .arg(timeNs / 1e6, 0, 'f', 3)
-);
+        .arg(timeNs / 1e6, 0, 'f', 3));
     }
 
 

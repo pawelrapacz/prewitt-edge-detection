@@ -1,5 +1,9 @@
-.global asmGrayScale
+.file "gray.s"
 .intel_syntax noprefix
+.text
+
+.global asmGrayScale
+.type asmGrayScale, @function
 
 # uint8_t* cGrayScale(uint32_t width, uint32_t height, const rgb_t* input)
 # width in edi, height in esi, input in rdx
@@ -20,7 +24,7 @@ asmGrayScale:
     call malloc@PLT
 
     test rax, rax
-    jz exit
+    jz exit_malloc_null
 
     mov r11, rax
     pop rdi
@@ -57,3 +61,5 @@ exit_malloc_null:
 exit_size_0:
     pop rbx
     ret
+
+.size asmGrayScale, .-asmGrayScale

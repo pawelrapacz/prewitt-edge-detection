@@ -26,7 +26,11 @@ uint8_t* cDetectEdges(uint32_t width, uint32_t height, const uint8_t* input) {
     if (input == nullptr)
         return nullptr;
 
-    uint8_t* result = malloc(width * height);
+    uint32_t size = width * height;
+    if (size == 0)
+        return nullptr;
+
+    uint8_t* result = malloc(size);
 
     if (result == nullptr)
         return nullptr;

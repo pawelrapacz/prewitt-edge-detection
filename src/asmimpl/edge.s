@@ -55,57 +55,50 @@ heightloop:
         # top row
         mov rax, rdx
         sub rax, r13
-        dec rax
+
 
         # left
-        movzx r12, byte ptr [rbx + rax]
+        movzx r12, byte ptr [rbx + rax - 1]
         add r10, r12
         add r11, r12
 
         # center
-        inc rax
         movzx r12, byte ptr [rbx + rax]
         add r10, r12
 
         # right
-        inc rax
-        movzx r12, byte ptr [rbx + rax]
+        movzx r12, byte ptr [rbx + rax + 1]
         add r10, r12
         sub r11, r12
 
         # ####################
         # center row
-        mov rax, rdx
-        dec rax
 
         # left
-        movzx r12, byte ptr [rbx + rax]
+        movzx r12, byte ptr [rbx + rdx - 1]
         add r11, r12
 
         # right
         add rax, 2
-        movzx r12, byte ptr [rbx + rax]
+        movzx r12, byte ptr [rbx + rdx - 1]
         sub r11, r12
 
         # ####################
         # bottom row
         mov rax, rdx
         add rax, r13
-        dec rax
 
         # left
-        movzx r12, byte ptr [rbx + rax]
+        movzx r12, byte ptr [rbx + rax - 1]
         sub r10, r12
         add r11, r12
 
         # center
-        inc rax
         movzx r12, byte ptr [rbx + rax]
         sub r10, r12
 
         # right
-        inc rax
-        movzx r12,  byte ptr [rbx + rax]
+        movzx r12,  byte ptr [rbx + rax + 1]
         sub r10, r12
         sub r11, r12
         

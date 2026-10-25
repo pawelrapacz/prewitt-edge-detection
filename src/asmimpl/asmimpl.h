@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-uint8_t* asmDetectEdges(uint32_t width, uint32_t height, const uint8_t* input);
+uint8_t* asmDetectEdges(uint32_t width, uint32_t height, const uint8_t* input, double amount);
 
 #ifdef __cplusplus
 }

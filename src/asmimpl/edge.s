@@ -4,8 +4,8 @@
 .global asmDetectEdges
 .type asmDetectEdges, @function
 
-# uint8_t* asmDetectEdges(uint32_t width, uint32_t height, const uint8_t* input);
-# width in edi, height in esi, input in rdx
+# uint8_t* asmDetectEdges(uint32_t width, uint32_t height, const uint8_t* input, double amount);
+# width in edi, height in esi, input in rdx, amount in xmm0
 asmDetectEdges:
     test rdx, rdx       # check if input not nullptr
     jz ret_on_fail
@@ -20,6 +20,10 @@ asmDetectEdges:
     push r12
     push r13
     push r14
+    
+    # store (amount) xmm0 on the stack
+    sub rsp, 0x10
+    movsd qword ptr [rsp], xmm0
 
     mov r13, rdi        # width in r13
     mov r14, rsi        # height in r14
@@ -31,6 +35,10 @@ asmDetectEdges:
     test rax, rax       # check malloc fail
     jz ret_and_restore_stack
 
+    
+    # restore amount from stack
+    movsd xmm2, qword ptr [rsp]
+    add rsp, 0x10
     mov rcx, rax        # output in rcx
 
     # setup bounds for the loops
@@ -111,6 +119,7 @@ heightloop:
         addsd xmm0, xmm1
 
         sqrtsd xmm0, xmm0
+        mulsd xmm0, xmm2
 
         cvtsd2si r11, xmm0
 

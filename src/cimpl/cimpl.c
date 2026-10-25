@@ -22,7 +22,7 @@ uint8_t* cGrayScale(uint32_t width, uint32_t height, const rgb_t* input) {
     return result;
 }
 
-uint8_t* cDetectEdges(uint32_t width, uint32_t height, const uint8_t* input) {
+uint8_t* cDetectEdges(uint32_t width, uint32_t height, const uint8_t* input, double amount) {
     if (input == nullptr)
         return nullptr;
 
@@ -49,7 +49,7 @@ uint8_t* cDetectEdges(uint32_t width, uint32_t height, const uint8_t* input) {
             double gx = input[leftCol - shift] + input[leftCol] + input[leftCol + shift]
                         - input[rightCol - shift] - input[rightCol] - input[rightCol + shift];
 
-            double magnitude = hypot(gx, gy);
+            double magnitude = hypot(gx, gy) * amount;
             uint32_t pidx = width * j + i;
 
             if (magnitude < 255.0)

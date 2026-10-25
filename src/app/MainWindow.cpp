@@ -5,6 +5,8 @@
 
 #include <asmimpl.h>
 #include <cimpl.h>
+#include <qnamespace.h>
+#include <qspinbox.h>
 #include <vector>
 
 #include <QImageReader>
@@ -27,6 +29,14 @@ MainWindow::MainWindow(QWidget *parent)
     connect(_ui->pathEdit, &QLineEdit::editingFinished, this, &MainWindow::loadImageFromEditedPath);
     connect(_ui->chooseImageBtn, &QPushButton::clicked, this, &MainWindow::loadImageFromDialog);
     connect(_ui->startBtn, &QPushButton::clicked, this, &MainWindow::startEdgeDetcetion);
+
+    connect(_ui->amountSlider, &QSlider::valueChanged, this, [this] (int val) {
+        _ui->amountSpinBox->setValue(val / 1000.0);
+    });
+
+    connect(_ui->amountSpinBox, &QDoubleSpinBox::valueChanged, this, [this] (double val) {
+        _ui->amountSlider->setValue(val * 1000);
+    });
 }
 
 MainWindow::~MainWindow() {
@@ -93,17 +103,18 @@ void MainWindow::startEdgeDetcetion() {
         );
     }
 
+    double amount = _ui->amountSpinBox->value();
     uint8_t* output = nullptr;
     if (_ui->implementationPicker->currentIndex() == 0) { // asm implementation
         _timer.start();
-        output = asmDetectEdges(width, height, input.data());
+        output = asmDetectEdges(width, height, input.data(), amount);
         auto timeNs = _timer.nsecsElapsed();
         _ui->time->setText(QString("%1")
         .arg(timeNs / 1e6, 0, 'f', 3));
         
     } else { // c implementation
         _timer.start();
-        output = cDetectEdges(width, height, input.data());
+        output = cDetectEdges(width, height, input.data(), amount);
         auto timeNs = _timer.nsecsElapsed();
         _ui->time->setText(QString("%1")
         .arg(timeNs / 1e6, 0, 'f', 3));
@@ -130,7 +141,7 @@ void MainWindow::drawImage() {
     _ui->imageLabel->setPixmap(QPixmap::fromImage(_image).scaled(
         _ui->imageLabel->size(),
         Qt::KeepAspectRatio,
-        Qt::FastTransformation
+        Qt::SmoothTransformation
     ));
 }
 

@@ -3,10 +3,9 @@
 #include "ui_MainWindow.h"
 #include "utils.h"
 
+#include <core.h>
 #include <asmimpl.h>
 #include <cimpl.h>
-#include <qnamespace.h>
-#include <qspinbox.h>
 #include <vector>
 
 #include <QImageReader>
@@ -17,6 +16,7 @@
 #include <QPushButton>
 #include <QString>
 #include <QMessageBox>
+#include <QSpinBox>
 #include <QResizeEvent>
 #include <QElapsedTimer>
 #include <QDebug>
@@ -114,7 +114,10 @@ void MainWindow::startEdgeDetcetion() {
         
     } else { // c implementation
         _timer.start();
-        output = cDetectEdges(width, height, input.data(), amount);
+
+        // output = cDetectEdges(width, height, input.data(), amount);
+        output = DetectEdgesThreads(width, height, input.data(), amount, cDetectEdgesWorker, threads);
+
         auto timeNs = _timer.nsecsElapsed();
         _ui->time->setText(QString("%1")
         .arg(timeNs / 1e6, 0, 'f', 3));

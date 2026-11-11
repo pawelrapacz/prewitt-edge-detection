@@ -15,6 +15,7 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 qt_standard_project_setup()
 
+add_subdirectory(src/core)
 add_subdirectory(src/cimpl)
 add_subdirectory(src/asmimpl)
 add_subdirectory(src/app)

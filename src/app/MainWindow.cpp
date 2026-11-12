@@ -105,6 +105,7 @@ void MainWindow::startEdgeDetcetion() {
 
     double amount = _ui->amountSpinBox->value();
     uint8_t* output = nullptr;
+    size_t bytesPerLine = width;
     if (_ui->implementationPicker->currentIndex() == 0) { // asm implementation
         _timer.start();
         output = asmDetectEdges(width, height, input.data(), amount);
@@ -116,7 +117,7 @@ void MainWindow::startEdgeDetcetion() {
         _timer.start();
 
         // output = cDetectEdges(width, height, input.data(), amount);
-        output = DetectEdgesThreads(width, height, input.data(), amount, cDetectEdgesWorker, threads);
+        output = detectEdgesThreads(width, height, gray.constBits(), gray.bytesPerLine(), amount, &bytesPerLine, cDetectEdgesWorker, threads);
 
         auto timeNs = _timer.nsecsElapsed();
         _ui->time->setText(QString("%1")
@@ -129,7 +130,7 @@ void MainWindow::startEdgeDetcetion() {
             output,
             width,
             height,
-            width,
+            bytesPerLine,
             QImage::Format_Grayscale8
         );
 

@@ -24,7 +24,7 @@ uint8_t* cGrayScale(uint32_t width, uint32_t height, const rgb_t* input) {
     return result;
 }
 
-uint8_t* cDetectEdges(uint32_t width, uint32_t height, const uint8_t* input, double amount) {
+uint8_t* cDetectEdges(uint32_t width, uint32_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine) {
     if (input == nullptr) return nullptr;
     if (width * height == 0) return nullptr;
 
@@ -32,13 +32,15 @@ uint8_t* cDetectEdges(uint32_t width, uint32_t height, const uint8_t* input, dou
     if (size == 0)
         return nullptr;
 
-    uint8_t* output = malloc(size);
+    uint8_t* output = imageBufferAlloc(width, height, outBytesPerLine);
 
     if (output == nullptr) return nullptr;
     
     detect_edges_params params = {
         input,
         output,
+        bytesPerLine,
+        *outBytesPerLine,
         amount,
         width,
         height,
@@ -63,32 +65,30 @@ int cDetectEdgesWorker(detect_edges_params* params) {
     if (p->input == nullptr)
         return -1;
 
-    uint32_t size = p->width * p->height;
+    size_t size = p->width * p->height;
     if (size == 0)
         return -1;
 
     if (p->output == nullptr)
         return -1;
-    
-    if (p->start == 0) p->start++;
-    if (p->end == p->height) p->end--;
 
-    for (uint32_t j = p->start; j < p->end; j++) {
-        for (uint32_t i = 1; i < p->width - 1; i++) {
+    size_t shift = p->inBytesPerLine;
+    for (size_t j = p->start; j < p->end; j++) {
+        for (size_t i = 1; i < p->width - 1; i++) {
 
-            uint32_t upperRow = p->width * (j - 1) + i;
-            uint32_t lowerRow = p->width * (j + 1) + i;
+            size_t pos = p->inBytesPerLine * j + i;
+            size_t upperRow = pos - shift;
+            size_t lowerRow = pos + shift;
             double gy = p->input[upperRow - 1] + p->input[upperRow] + p->input[upperRow + 1]
                         - p->input[lowerRow - 1] - p->input[lowerRow] - p->input[lowerRow + 1];
 
-            uint32_t shift = p->width;
-            uint32_t leftCol = p->width * j + i - 1;
-            uint32_t rightCol = p->width * j + i + 1;
+            size_t leftCol = pos - 1;
+            size_t rightCol = pos + 1;
             double gx = p->input[leftCol - shift] + p->input[leftCol] + p->input[leftCol + shift]
                         - p->input[rightCol - shift] - p->input[rightCol] - p->input[rightCol + shift];
 
             double magnitude = hypot(gx, gy) * p->amount;
-            uint32_t pidx = p->width * j + i;
+            size_t pidx = p->outBytesPerLine * j + i;
 
             if (magnitude < 255.0)
                 p->output[pidx] = magnitude;

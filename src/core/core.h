@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -13,14 +14,20 @@ typedef struct {
 typedef struct {
     const uint8_t* input;
     uint8_t* output;
+    size_t inBytesPerLine;
+    size_t outBytesPerLine;
     double amount;
-    uint32_t width, height;
-    uint32_t start, end;
+    size_t width, height;
+    size_t start, end;
 } detect_edges_params;
 
 typedef int (*detect_edges_worker)(detect_edges_params*);
 
-uint8_t* DetectEdgesThreads(uint32_t width, uint32_t height, const uint8_t* input, double amount, detect_edges_worker worker, uint32_t threads);
+uint8_t* imageBufferAlloc(size_t width, size_t height, size_t* bytesPerLine);
+
+uint8_t* alignedImageBufferAlloc(size_t width, size_t height, size_t dataAlign, size_t addrAlign, size_t* bytesPerLine);
+
+uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker, uint32_t threads);
 
 #ifdef __cplusplus
 }

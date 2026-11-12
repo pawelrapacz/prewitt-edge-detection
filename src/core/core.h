@@ -6,11 +6,9 @@
 extern "C" {
 #endif
 
-struct rgb_t {
+typedef struct {
     uint8_t r, g, b;
-};
-
-typedef struct rgb_t rgb_t;
+} rgb_t;
 
 typedef struct {
     const uint8_t* input;

@@ -42,6 +42,39 @@ static inline int workerWrapper(void* p) {
     return params->worker_func(params->worker_params);
 }
 
+uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker) {
+    if (input == nullptr) return nullptr;
+    if (width * height == 0) return nullptr;
+
+    uint32_t size = width * height;
+    if (size == 0)
+        return nullptr;
+
+    uint8_t* output = imageBufferAlloc(width, height, outBytesPerLine);
+
+    if (output == nullptr) return nullptr;
+    
+    detect_edges_params params = {
+        input,
+        output,
+        bytesPerLine,
+        *outBytesPerLine,
+        amount,
+        width,
+        height,
+        1,
+        height - 1
+    };
+
+    int res = worker(&params);
+
+    if (res != 0) {
+        free(output);
+        return nullptr;
+    }
+
+    return output;
+}
 
 uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker, uint32_t threads) {
     if (threads == 0) return nullptr;

@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-uint8_t* asmDetectEdges(uint32_t width, uint32_t height, const uint8_t* input, double amount);
+uint8_t* asmDetectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine);
 
 int asmDetectEdgesWorker(detect_edges_params* params);
 

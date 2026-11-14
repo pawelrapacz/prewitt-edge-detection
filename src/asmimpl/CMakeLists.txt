@@ -1,9 +1,9 @@
 add_library(asmimpl SHARED
     asmimpl.h
-    gray.s
-    edge.s
     detect_edges_params_offsets.inc
+    asmDetectEdges.s
     asmDetectEdgesWorker.s
+    gray.s
 )
 
 target_include_directories(asmimpl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -24,38 +24,8 @@ uint8_t* cGrayScale(uint32_t width, uint32_t height, const rgb_t* input) {
     return result;
 }
 
-uint8_t* cDetectEdges(uint32_t width, uint32_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine) {
-    if (input == nullptr) return nullptr;
-    if (width * height == 0) return nullptr;
-
-    uint32_t size = width * height;
-    if (size == 0)
-        return nullptr;
-
-    uint8_t* output = imageBufferAlloc(width, height, outBytesPerLine);
-
-    if (output == nullptr) return nullptr;
-    
-    detect_edges_params params = {
-        input,
-        output,
-        bytesPerLine,
-        *outBytesPerLine,
-        amount,
-        width,
-        height,
-        0,
-        height
-    };
-
-    int res = cDetectEdgesWorker(&params);
-
-    if (res != 0) {
-        free(output);
-        return nullptr;
-    }
-
-    return output;
+uint8_t* cDetectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine) {
+    return detectEdges(width, height, input, bytesPerLine, amount, outBytesPerLine, cDetectEdgesWorker);
 }
 
 

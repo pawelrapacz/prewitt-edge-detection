@@ -3,7 +3,6 @@
 #include <QLabel>
 #include <QDragEnterEvent>
 #include <QDropEvent>
-#include <qevent.h>
 
 class ImageLabel : public QLabel {
     Q_OBJECT

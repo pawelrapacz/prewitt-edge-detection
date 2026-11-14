@@ -2,6 +2,7 @@
 
 #include <QMainWindow>
 #include <QImage>
+#include <QLabel>
 #include <QString>
 #include <QResizeEvent>
 #include <QElapsedTimer>
@@ -21,16 +22,19 @@ public:
 
 private slots:
     void loadImage(const QString &path);
-    void loadImageFromEditedPath();
+    void loadImageFromPath();
     void loadImageFromDialog();
     void startEdgeDetcetion();
+    void saveImage();
 
 private:
-    void drawImage();
+    void drawImage(const QImage& image, QLabel& label);
     void resizeEvent(QResizeEvent *event) override;
 
 private:
     QElapsedTimer _timer;
-    QImage _image;
+    QString _inputImagePath;
+    QImage _inputImage;
+    QImage _resultImage;
     Ui::MainWindow *_ui = nullptr;
 };

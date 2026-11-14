@@ -6,8 +6,8 @@
 #include <core.h>
 #include <asmimpl.h>
 #include <cimpl.h>
-#include <vector>
 
+#include <QLabel>
 #include <QImageReader>
 #include <QImage>
 #include <QPixmap>
@@ -25,10 +25,11 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow{parent}, _ui(new Ui::MainWindow)
 {
     _ui->setupUi(this);
-    connect(_ui->imageLabel, &ImageLabel::imageDropped, this, &MainWindow::loadImage);
-    connect(_ui->pathEdit, &QLineEdit::editingFinished, this, &MainWindow::loadImageFromEditedPath);
+    connect(_ui->inputImageLabel, &ImageLabel::imageDropped, this, &MainWindow::loadImage);
+    connect(_ui->pathEdit, &QLineEdit::editingFinished, this, &MainWindow::loadImageFromPath);
     connect(_ui->chooseImageBtn, &QPushButton::clicked, this, &MainWindow::loadImageFromDialog);
     connect(_ui->startBtn, &QPushButton::clicked, this, &MainWindow::startEdgeDetcetion);
+    connect(_ui->saveBtn, &QPushButton::clicked, this, &MainWindow::saveImage);
 
     connect(_ui->amountSlider, &QSlider::valueChanged, this, [this] (int val) {
         _ui->amountSpinBox->setValue(val / 1000.0);
@@ -43,24 +44,24 @@ MainWindow::~MainWindow() {
     delete _ui;
 }
 
-
 void MainWindow::loadImage(const QString &path) {
     if (path.isEmpty())
         return;
 
-    _image = QImage(path);
+    _inputImagePath = path;
+    _inputImage = QImage(_inputImagePath);
 
-    _ui->imageSize->setText(QString("Image size: %1x%2").arg(_image.width()).arg(_image.height()));
-    _ui->pathEdit->setText(path);
-    drawImage();
+    _ui->imageSize->setText(QString("Image size: %1x%2").arg(_inputImage.width()).arg(_inputImage.height()));
+    _ui->pathEdit->setText(_inputImagePath);
+    drawImage(_inputImage, *(_ui->inputImageLabel));
 }
 
 
-void MainWindow::loadImageFromEditedPath() {
+void MainWindow::loadImageFromPath() {
     QFileInfo fileInfo(_ui->pathEdit->text());
 
     if (not fileInfo.isFile()) {
-        QMessageBox::warning(this, "File not found", fileInfo.filePath() + " is not a file or does not exist.");
+        QMessageBox::warning(this, "File not found", "\"" + fileInfo.filePath() + "\" is not a file or does not exist.");
         return;
     }
 
@@ -74,66 +75,88 @@ void MainWindow::loadImageFromEditedPath() {
 
 
 void MainWindow::loadImageFromDialog() {
-    QString path = QFileDialog::getOpenFileName(this, "Choose file", "~/","(*.png *.jpg *.jpeg *.bmp)");
+    QString path = QFileDialog::getOpenFileName(this, "Choose file", QString(),"(*.png *.jpg *.jpeg *.bmp)");
     loadImage(path);
 }
 
 
 void MainWindow::startEdgeDetcetion() {
-    if (_image.isNull()) {
+    if (_inputImage.isNull()) {
         QMessageBox::information(this, "Choose a file", "To start edge detection first choose a file.");
         return;
     }
-
-    int threads = _ui->threadCountBox->value();
-    int width = _image.width();
-    int height = _image.height();
-
-    QImage gray = _image.convertToFormat(QImage::Format_Grayscale8);
-
-    double amount = _ui->amountSpinBox->value();
-    uint8_t* output = nullptr;
-    size_t bytesPerLine = width;
-    if (_ui->implementationPicker->currentIndex() == 0) { // asm implementation
-        _timer.start();
-
-        output = detectEdgesThreads(width, height, gray.constBits(), gray.bytesPerLine(), amount, &bytesPerLine, asmDetectEdgesWorker, threads);
-
-        auto timeNs = _timer.nsecsElapsed();
-        _ui->time->setText(QString("%1")
-        .arg(timeNs / 1e6, 0, 'f', 3));
+    
+    detect_edges_worker worker;
+    if (_ui->implementationPicker->currentIndex() == 0) // asm implementation
+        worker = asmDetectEdgesWorker;
+    else // c implementation
+        worker = cDetectEdgesWorker;
         
-    } else { // c implementation
-        _timer.start();
+    int width = _inputImage.width();
+    int height = _inputImage.height();
+    int threads = _ui->threadCountBox->value();
 
-        // output = cDetectEdges(width, height, input.data(), amount);
-        output = detectEdgesThreads(width, height, gray.constBits(), gray.bytesPerLine(), amount, &bytesPerLine, cDetectEdgesWorker, threads);
-
-        auto timeNs = _timer.nsecsElapsed();
-        _ui->time->setText(QString("%1")
-        .arg(timeNs / 1e6, 0, 'f', 3));
+    if (threads < 1 || threads > 64) {
+        QMessageBox::warning(this, "Error", "Thread count can be set from 1 to 64.");
+        return;
     }
 
+    double amount = _ui->amountSpinBox->value();
+    if (amount < 1. || amount > 10.) {
+        QMessageBox::warning(this, "Error", "Amount can be set from 1 to 10.");
+        return;
+    }
+
+    size_t bytesPerLine {};
+    QImage gray = _inputImage.convertToFormat(QImage::Format_Grayscale8);
+        
+    _timer.start();
+        
+    uint8_t* output = detectEdgesThreads(width, height, gray.bits(), gray.bytesPerLine(), amount, &bytesPerLine, worker, threads);
+
+    auto timeNs = _timer.nsecsElapsed();
+    _ui->time->setText(
+        QString("%1").arg(timeNs / 1e6, 0, 'f', 3)
+    );
 
     if (output) {
-        _image = QImage(
+        _resultImage = QImage(
             output,
             width,
             height,
             bytesPerLine,
-            QImage::Format_Grayscale8
+            QImage::Format_Grayscale8,
+            free,
+            output
         );
 
-        drawImage();
+        if (_resultImage.isNull())
+            free(output);
+
+        drawImage(_resultImage, *(_ui->resultImageLabel));
     }
 }
 
+void MainWindow::saveImage() {
+    if (_resultImage.isNull()) {
+        QMessageBox::information(this, "No image", "No image to save!");
+        return;
+    }
 
-void MainWindow::drawImage() {
-    if (_image.isNull()) return;
+    QString path = QFileDialog::getSaveFileName(this, "Provide a file name to save image", "image.jpg", "(*.png *.jpg *.jpeg *.bmp)");
 
-    _ui->imageLabel->setPixmap(QPixmap::fromImage(_image).scaled(
-        _ui->imageLabel->size(),
+    if (path.isEmpty())
+        return;
+
+    if (!_resultImage.save(path))
+        QMessageBox::warning(this, "Failure", "Could not save file: " + path);
+}
+
+void MainWindow::drawImage(const QImage& image, QLabel& label) {
+    if (image.isNull()) return;
+
+    label.setPixmap(QPixmap::fromImage(image).scaled(
+        label.size(),
         Qt::KeepAspectRatio,
         Qt::SmoothTransformation
     ));
@@ -141,5 +164,6 @@ void MainWindow::drawImage() {
 
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
-    drawImage();
+    drawImage(_inputImage, *(_ui->inputImageLabel));
+    drawImage(_resultImage, *(_ui->resultImageLabel));
 }

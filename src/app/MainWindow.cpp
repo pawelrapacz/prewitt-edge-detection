@@ -91,24 +91,14 @@ void MainWindow::startEdgeDetcetion() {
 
     QImage gray = _image.convertToFormat(QImage::Format_Grayscale8);
 
-    std::vector<uint8_t> input(
-        static_cast<size_t>(width) * height
-    );
-
-    for (int y = 0; y < height; ++y) {
-        std::memcpy(
-            input.data() + static_cast<size_t>(y) * width,
-            gray.constScanLine(y),
-            static_cast<size_t>(width)
-        );
-    }
-
     double amount = _ui->amountSpinBox->value();
     uint8_t* output = nullptr;
     size_t bytesPerLine = width;
     if (_ui->implementationPicker->currentIndex() == 0) { // asm implementation
         _timer.start();
-        output = asmDetectEdges(width, height, input.data(), amount);
+
+        output = detectEdgesThreads(width, height, gray.constBits(), gray.bytesPerLine(), amount, &bytesPerLine, asmDetectEdgesWorker, threads);
+
         auto timeNs = _timer.nsecsElapsed();
         _ui->time->setText(QString("%1")
         .arg(timeNs / 1e6, 0, 'f', 3));

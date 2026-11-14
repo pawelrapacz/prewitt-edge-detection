@@ -1,0 +1,9 @@
+.equ PARAM_INPUT,           0
+.equ PARAM_OUTPUT,          8
+.equ PARAM_IN_BPL,         16
+.equ PARAM_OUT_BPL,        24
+.equ PARAM_AMOUNT,         32
+.equ PARAM_WIDTH,          40
+.equ PARAM_HEIGHT,         48
+.equ PARAM_START,          56
+.equ PARAM_END,            64

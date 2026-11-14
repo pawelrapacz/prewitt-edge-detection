@@ -3,6 +3,7 @@
 
 .include "detect_edges_params_offsets.inc"
 
+.text
 .global asmDetectEdgesWorker
 .type asmDetectEdgesWorker, @function
 
@@ -13,6 +14,10 @@ asmDetectEdgesWorker:
     test r8, r8       # check if input not nullptr
     jz ret_on_fail
 
+    mov r9, qword ptr [rdi + PARAM_OUTPUT]    
+    test r9, r9       # check output nullptr
+    jz ret_on_fail
+
     # calculate size = width*height
     mov r10, qword ptr [rdi + PARAM_WIDTH]
     mov rax, qword ptr [rdi + PARAM_HEIGHT]
@@ -20,16 +25,11 @@ asmDetectEdgesWorker:
     test rax, rax
     jz ret_on_fail      # check if size == 0
 
-    mov r9, qword ptr [rdi + PARAM_OUTPUT]    
-    test r9, r9       # check output nullptr
-    jz ret_on_fail
-
     push rbx
     push r12
     push r13
     push r14
     push r15
-
 
     # input in r8
     # output in r9
@@ -43,16 +43,23 @@ asmDetectEdgesWorker:
 
     mov r13, qword ptr [rdi + PARAM_START]
     mov r14, qword ptr [rdi + PARAM_END]
+
+    # calculate starting address in
+    mov rax, r13
+    mul r11
+    lea r8, [r8 + rax]
+
+    # calculate starting address out
+    mov rax, r13
+    mul r12
+    lea r9, [r9 + rax]
+
 heightloop:
     mov rsi, 1
 
     widthloop:
-        # available r10, r11, r12, rax, rdx
         # calculate current pixel index
-        mov rax, r13
-        mul r11
-        add rax, rsi    # current in pixel index in rax
-        mov rdx, rax
+        lea rdx, [r8 + rsi]
 
         xor rbx, rbx    # Gy
         xor rcx, rcx    # Gx
@@ -64,16 +71,16 @@ heightloop:
 
 
         # left
-        movzx r15, byte ptr [r8 + rax - 1]
+        movzx r15, byte ptr [rax - 1]
         add rbx, r15
         add rcx, r15
 
         # center
-        movzx r15, byte ptr [r8 + rax]
+        movzx r15, byte ptr [rax]
         add rbx, r15
 
         # right
-        movzx r15, byte ptr [r8 + rax + 1]
+        movzx r15, byte ptr [rax + 1]
         add rbx, r15
         sub rcx, r15
 
@@ -81,30 +88,29 @@ heightloop:
         # center row
 
         # left
-        movzx r15, byte ptr [r8 + rdx - 1]
+        movzx r15, byte ptr [rdx - 1]
         add rcx, r15
 
         # right
         add rax, 2
-        movzx r15, byte ptr [r8 + rdx - 1]
+        movzx r15, byte ptr [rdx + 1]
         sub rcx, r15
 
         # ####################
         # bottom row
-        mov rax, rdx
-        add rax, r11
+        lea rax, [rdx + r11]
 
         # left
-        movzx r15, byte ptr [r8 + rax - 1]
+        movzx r15, byte ptr [rax - 1]
         sub rbx, r15
         add rcx, r15
 
         # center
-        movzx r15, byte ptr [r8 + rax]
+        movzx r15, byte ptr [rax]
         sub rbx, r15
 
         # right
-        movzx r15,  byte ptr [r8 + rax + 1]
+        movzx r15,  byte ptr [rax + 1]
         sub rbx, r15
         sub rcx, r15
 
@@ -119,22 +125,22 @@ heightloop:
         sqrtsd xmm0, xmm0
         mulsd xmm0, xmm2
 
-        cvtsd2si r15, xmm0
+        cvttsd2si rbx, xmm0
 
-        cmp r15, 255
+        cmp rbx, 255
         jb no_squash
 
-        mov r15b, 255        
+        mov bl, 255
     
         no_squash:
-            mov rax, r13
-            mul r12
-            add rax, rsi    # current out pixel index in rax
-            mov byte ptr [r9 + rax], r15b
-        
+            mov byte ptr [r9 + rsi], bl
+
         inc rsi
         cmp rsi, r10
         jb widthloop
+
+    lea r8, [r8 + r11]
+    lea r9, [r9 + r12]
 
     inc r13
     cmp r13, r14

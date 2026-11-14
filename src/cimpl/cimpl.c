@@ -59,17 +59,15 @@ uint8_t* cDetectEdges(uint32_t width, uint32_t height, const uint8_t* input, siz
 }
 
 
-int cDetectEdgesWorker(detect_edges_params* params) {
-    detect_edges_params* p = params;
-
+int cDetectEdgesWorker(detect_edges_params* p) {
     if (p->input == nullptr)
+        return -1;
+
+    if (p->output == nullptr)
         return -1;
 
     size_t size = p->width * p->height;
     if (size == 0)
-        return -1;
-
-    if (p->output == nullptr)
         return -1;
 
     size_t shift = p->inBytesPerLine;
@@ -79,18 +77,18 @@ int cDetectEdgesWorker(detect_edges_params* params) {
             size_t pos = p->inBytesPerLine * j + i;
             size_t upperRow = pos - shift;
             size_t lowerRow = pos + shift;
-            double gy = p->input[upperRow - 1] + p->input[upperRow] + p->input[upperRow + 1]
+            int64_t gy = p->input[upperRow - 1] + p->input[upperRow] + p->input[upperRow + 1]
                         - p->input[lowerRow - 1] - p->input[lowerRow] - p->input[lowerRow + 1];
 
             size_t leftCol = pos - 1;
             size_t rightCol = pos + 1;
-            double gx = p->input[leftCol - shift] + p->input[leftCol] + p->input[leftCol + shift]
+            int64_t gx = p->input[leftCol - shift] + p->input[leftCol] + p->input[leftCol + shift]
                         - p->input[rightCol - shift] - p->input[rightCol] - p->input[rightCol + shift];
 
-            double magnitude = hypot(gx, gy) * p->amount;
+            int64_t magnitude = hypot(gx, gy) * p->amount;
             size_t pidx = p->outBytesPerLine * j + i;
 
-            if (magnitude < 255.0)
+            if (magnitude < 255)
                 p->output[pidx] = magnitude;
             else
                 p->output[pidx] = 255;

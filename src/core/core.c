@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <threads.h>
+#include <string.h>
 
 
 uint8_t* imageBufferAlloc(size_t width, size_t height, size_t* bytesPerLine) {
@@ -20,7 +21,12 @@ uint8_t* alignedImageBufferAlloc(size_t width, size_t height, size_t dataAlign, 
     if (bytesPerLine)
         *bytesPerLine = _bytesPerLine;
          
-    return aligned_alloc(addrAlign, size);
+    void* ptr = aligned_alloc(addrAlign, size);
+
+    if (ptr != nullptr)
+        memset(ptr, 0, size);
+
+    return ptr;
 }
 
 

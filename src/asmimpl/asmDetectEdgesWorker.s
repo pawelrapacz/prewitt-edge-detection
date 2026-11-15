@@ -25,103 +25,136 @@ asmDetectEdgesWorker:
     test rax, rax
     je ret_on_fail      # check if size == 0
 
-    push rbx
-    push r12
-    push r13
-    push r14
-    push r15
 
     # input in r8
     # output in r9
 
+    # check start < end
+    mov r11, qword ptr [rdi + PARAM_START]  # start row
+    cmp r11, qword ptr [rdi + PARAM_END]    # end row
+    jnb ret_on_fail
+
+    # check 1 < width - 1
+    sub r10, 1 # width - 1 in r10
+    cmp r10, 1
+    jbe ret_on_fail
+
+    # save stack
+    push rbx
+    push r12
+    push r13
+    push r14
+
+    mov r13, qword ptr [rdi + PARAM_IN_BPL]
+
     cvtsd2ss xmm2, qword ptr [rdi + PARAM_AMOUNT]
 
-    dec r10
+    # calculate starting address input
+    # start row * bytesPerLine
+    mov rax, r11
+    mul r13
+    lea r8, [r8 + rax]  # in address in r8
 
-    mov r11, qword ptr [rdi + PARAM_IN_BPL]
-
-    mov r13, qword ptr [rdi + PARAM_START]
-
-    # calculate starting address in
-    mov rax, r13
-    mul r11
-    lea r8, [r8 + rax]
-
-    # calculate starting address out
-    mov rax, r13
+    # calculate starting address output
+    # start row * bytesPerLine
+    mov rax, r11
     mul qword ptr [rdi + PARAM_OUT_BPL]
-    lea r9, [r9 + rax]
+    lea r9, [r9 + rax]  # out address in r8
 
 heightloop:
-    mov rsi, 1
+    mov rsi, 1  # start inside loop
 
     widthloop:
+        # break false dependency
+        xorps xmm0, xmm0
+        xorps xmm1, xmm1
+
         # calculate current pixel index
         lea rdx, [r8 + rsi]
 
-        # top row
+        # calculate index - bytesPerLine (upper row)
         mov rax, rdx
-        sub rax, r11
+        sub rax, r13
 
+        # perform read and addition/substraction
         # top left
         movzx ebx, byte ptr [rax - 1]
+        
         # top center
-        movzx r15d, byte ptr [rax]
+        movzx r12d, byte ptr [rax]
+
         # top right
         movzx r14d, byte ptr [rax + 1]
-        # center left
-        movzx ecx, byte ptr [rdx - 1]
-        add ecx, ebx
-        add ebx, r15d
-        add ebx, r14d
+        mov ecx, ebx
+        add ebx, r12d
         sub ecx, r14d
-        # bottom right
-        movzx eax,  byte ptr [rdx + r11 + 1]
-        sub ebx, eax
-        sub ecx, eax
-        # bottom left
-        movzx r15d, byte ptr [rdx + r11 - 1]
-        # bottom center
-        movzx r14d, byte ptr [rdx + r11]
+        add ebx, r14d
+
+        # center left
+        movzx eax, byte ptr [rdx - 1]
+
         # center right
-        movzx eax, byte ptr [rdx + 1]
+        movzx r12d, byte ptr [rdx + 1]
+        add ecx, eax
+        sub ecx, r12d
+
+        # bottom left
+        movzx r14d, byte ptr [rdx + r13 - 1]
         sub ebx, r14d
-        sub ebx, r15d
+        add ecx, r14d
+
+        # bottom center
+        movzx r12d, byte ptr [rdx + r13]
+        sub ebx, r12d
+
+        # bottom right
+        movzx r14d,  byte ptr [rdx + r13 + 1]
+        sub ebx, r14d
+        sub ecx, r14d
+
+        # calculate sqrt(gx * gx + gy * gy)
+        # convert to float
         cvtsi2ss xmm0, ebx
-        add ecx, r15d
-        mulss xmm0, xmm0
-        sub ecx, eax
         cvtsi2ss xmm1, ecx
+        # square numbers
+        mulss xmm0, xmm0
         mulss xmm1, xmm1
 
-        mov eax, 255
         addss xmm0, xmm1
 
         sqrtss xmm0, xmm0
+
+        # multiply by amount
         mulss xmm0, xmm2
 
+        # convert to int
         cvttss2si edx, xmm0
 
+        # check if the value is higher than 255
+        mov eax, 255
         cmp edx, eax
-        cmovg edx, eax
-        mov byte ptr [r9 + rsi], dl
 
+        cmovg edx, eax  # if higher than 255 change to 255
+        mov byte ptr [r9 + rsi], dl # write result
+
+        # loop increment and condition check
         inc rsi
         cmp rsi, r10
         jb widthloop
 
-    mov r11, qword ptr [rdi + PARAM_IN_BPL]
-    lea r8, [r8 + r11]
-    inc r13
+    # increment output and input pointers to the next row
+    lea r8, [r8 + r13]
     mov r12, qword ptr [rdi + PARAM_OUT_BPL]
     lea r9, [r9 + r12]
 
-    cmp r13, qword ptr [rdi + PARAM_END]
+    # loop increment and condition check
+    inc r11
+    cmp r11, qword ptr [rdi + PARAM_END]
     jb heightloop
 
 
 ret_and_restore_stack:
-    pop r15
+    # restore stack and return 0
     pop r14
     pop r13
     pop r12
@@ -130,6 +163,7 @@ ret_and_restore_stack:
     ret
 
 ret_on_fail:
+    # return fail (-1)
     mov eax, -1
     ret
 

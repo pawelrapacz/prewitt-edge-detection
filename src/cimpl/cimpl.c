@@ -42,21 +42,30 @@ int cDetectEdgesWorker(detect_edges_params* p) {
     
     float amount = p->amount;
     size_t shift = p->inBytesPerLine;
+
     for (size_t j = p->start; j < p->end; j++) {
         for (size_t i = 1; i < p->width - 1; i++) {
 
             size_t pos = p->inBytesPerLine * j + i;
             size_t upperRow = pos - shift;
             size_t lowerRow = pos + shift;
-            int64_t gy = p->input[upperRow - 1] + p->input[upperRow] + p->input[upperRow + 1]
-                        - p->input[lowerRow - 1] - p->input[lowerRow] - p->input[lowerRow + 1];
 
-            size_t leftCol = pos - 1;
-            size_t rightCol = pos + 1;
-            int64_t gx = p->input[leftCol - shift] + p->input[leftCol] + p->input[leftCol + shift]
-                        - p->input[rightCol - shift] - p->input[rightCol] - p->input[rightCol + shift];
+            uint8_t tl = p->input[upperRow - 1];
+            uint8_t tc = p->input[upperRow];
+            uint8_t tr = p->input[upperRow + 1];
 
-            int64_t magnitude = hypotf(gx, gy) * amount;
+            uint8_t cl = p->input[pos - 1];
+            uint8_t cr = p->input[pos + 1];
+
+            uint8_t bl = p->input[lowerRow - 1];
+            uint8_t bc = p->input[lowerRow];
+            uint8_t br = p->input[lowerRow + 1];
+
+            int32_t gy = tl + tc + tr - bl - bc - br;
+            int32_t gx = tl + cl + bl - tr - cr - br;
+
+
+            int32_t magnitude = hypotf(gx, gy) * amount;
             size_t pidx = p->outBytesPerLine * j + i;
 
             if (magnitude < 255)

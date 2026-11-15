@@ -43,19 +43,18 @@ asmDetectEdgesWorker:
     test rax, rax
     je ret_on_fail      # check if size == 0
 
-
     # input in r8
     # output in r9
 
     # check start < end
     mov r11, qword ptr [rdi + PARAM_START]  # start row
     cmp r11, qword ptr [rdi + PARAM_END]    # end row
-    jnb ret_on_fail
+    jnb ret_no_cleanup
 
     # check 1 < width - 1
     sub r10, 1 # width - 1 in r10
     cmp r10, 1
-    jbe ret_on_fail
+    jbe ret_no_cleanup
 
     # save stack
     push rbx
@@ -173,6 +172,7 @@ ret_and_restore_stack:
     pop r13
     pop r12
     pop rbx
+ret_no_cleanup:
     xor eax, eax
     ret
 

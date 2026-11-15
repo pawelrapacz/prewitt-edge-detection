@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.31)
 project(prewitt-edge-detection LANGUAGES CXX C ASM)
 
-set(CMAKE_CONFIGURATION_TYPES Debug Release)
+set(CMAKE_CONFIGURATION_TYPES Debug Release MinSizeRel)
 
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)

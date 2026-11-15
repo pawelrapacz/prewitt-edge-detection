@@ -39,7 +39,8 @@ int cDetectEdgesWorker(detect_edges_params* p) {
     size_t size = p->width * p->height;
     if (size == 0)
         return -1;
-
+    
+    float amount = p->amount;
     size_t shift = p->inBytesPerLine;
     for (size_t j = p->start; j < p->end; j++) {
         for (size_t i = 1; i < p->width - 1; i++) {
@@ -55,7 +56,7 @@ int cDetectEdgesWorker(detect_edges_params* p) {
             int64_t gx = p->input[leftCol - shift] + p->input[leftCol] + p->input[leftCol + shift]
                         - p->input[rightCol - shift] - p->input[rightCol] - p->input[rightCol + shift];
 
-            int64_t magnitude = hypot(gx, gy) * p->amount;
+            int64_t magnitude = hypotf(gx, gy) * amount;
             size_t pidx = p->outBytesPerLine * j + i;
 
             if (magnitude < 255)

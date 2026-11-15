@@ -12,14 +12,13 @@ uint8_t* imageBufferAlloc(size_t width, size_t height, size_t* bytesPerLine) {
 }
 
 uint8_t* alignedImageBufferAlloc(size_t width, size_t height, size_t dataAlign, size_t addrAlign, size_t* bytesPerLine) {
-    if (dataAlign == 0 || addrAlign == 0)
+    if (dataAlign == 0 || addrAlign == 0 || bytesPerLine == nullptr)
         return nullptr;
 
     size_t _bytesPerLine = (width + dataAlign - 1) / dataAlign * dataAlign;
+    *bytesPerLine = _bytesPerLine;
     size_t size = (_bytesPerLine * width + addrAlign - 1) / addrAlign * addrAlign;
 
-    if (bytesPerLine)
-        *bytesPerLine = _bytesPerLine;
          
     void* ptr = aligned_alloc(addrAlign, size);
 
@@ -50,15 +49,19 @@ uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t b
     if (size == 0)
         return nullptr;
 
-    uint8_t* output = imageBufferAlloc(width, height, outBytesPerLine);
+    size_t obpl;
+    uint8_t* output = imageBufferAlloc(width, height, &obpl);
 
     if (output == nullptr) return nullptr;
+
+    if (outBytesPerLine != nullptr)
+        *outBytesPerLine = obpl;
     
     detect_edges_params params = {
         input,
         output,
         bytesPerLine,
-        *outBytesPerLine,
+        obpl,
         amount,
         width,
         height,
@@ -78,11 +81,11 @@ uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t b
 
 uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker, uint32_t threads) {
     if (threads == 0) return nullptr;
-    if (outBytesPerLine == nullptr) return nullptr;
     if (input == nullptr) return nullptr;
     if (width * height == 0) return nullptr;
 
-    uint8_t* output = imageBufferAlloc(width, height, outBytesPerLine);
+    size_t obpl;
+    uint8_t* output = imageBufferAlloc(width, height, &obpl);
     detect_edges_params* params = malloc(threads * sizeof(detect_edges_params));
     worker_params* wparams = malloc(threads * sizeof(worker_params));
     thrd_t* thrd = malloc(threads * sizeof(thrd_t));
@@ -95,13 +98,15 @@ uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, s
         return nullptr;
     }
 
+    if (outBytesPerLine != nullptr)
+        *outBytesPerLine = obpl;
 
     uint32_t created = 0;
     for (uint32_t i = 0; i < threads; i++) {
         params[i].input = input;
         params[i].output = output;
         params[i].inBytesPerLine = bytesPerLine;
-        params[i].outBytesPerLine = *outBytesPerLine;
+        params[i].outBytesPerLine = obpl;
         params[i].width = width;
         params[i].height = height;
         params[i].amount = amount;

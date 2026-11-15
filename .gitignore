@@ -5,10 +5,12 @@
 [Oo]ut*/
 [Bb]uild*/
 [Dd]ebug*/
+img/
 
 [Dd]ocs/*
 ![Dd]ocs/[Dd]oxyfile
 
+*.csv
 *.log
 *.out
 *.exe

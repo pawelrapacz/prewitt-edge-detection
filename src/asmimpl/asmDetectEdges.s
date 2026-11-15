@@ -1,4 +1,4 @@
-.file "edge.s"
+.file "asmDetectEdges.s"
 .intel_syntax noprefix
 
 .global asmDetectEdges

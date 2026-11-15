@@ -15,7 +15,7 @@ asmDetectEdgesWorker:
     je ret_on_fail
 
     mov r9, qword ptr [rdi + PARAM_OUTPUT]    
-    cmp r9, 0       # check output nullptr
+    cmp r9, 0       # check output not nullptr
     je ret_on_fail
 
     # calculate size = width*height
@@ -43,20 +43,19 @@ asmDetectEdgesWorker:
     push rbx
     push r12
     push r13
-    push r14
 
     mov r13, qword ptr [rdi + PARAM_IN_BPL]
 
     cvtsd2ss xmm2, qword ptr [rdi + PARAM_AMOUNT]
 
     # calculate starting address input
-    # start row * bytesPerLine
+    # start row * inBytesPerLine
     mov rax, r11
     mul r13
     lea r8, [r8 + rax]  # in address in r8
 
     # calculate starting address output
-    # start row * bytesPerLine
+    # start row * outBytesPerLine
     mov rax, r11
     mul qword ptr [rdi + PARAM_OUT_BPL]
     lea r9, [r9 + rax]  # out address in r8
@@ -78,39 +77,42 @@ heightloop:
 
         # perform read and addition/substraction
         # top left
-        movzx ebx, byte ptr [rax - 1]
+        movzx ecx, byte ptr [rax - 1]
         
         # top center
-        movzx r12d, byte ptr [rax]
+        movzx ebx, byte ptr [rax]
 
         # top right
-        movzx r14d, byte ptr [rax + 1]
-        mov ecx, ebx
+        movzx r12d, byte ptr [rax + 1]
+
+        add ebx, ecx
+        sub ecx, r12d
         add ebx, r12d
-        sub ecx, r14d
-        add ebx, r14d
 
         # center left
         movzx eax, byte ptr [rdx - 1]
 
         # center right
         movzx r12d, byte ptr [rdx + 1]
+
         add ecx, eax
         sub ecx, r12d
 
         # bottom left
-        movzx r14d, byte ptr [rdx + r13 - 1]
-        sub ebx, r14d
-        add ecx, r14d
+        movzx eax, byte ptr [rdx + r13 - 1]
 
         # bottom center
         movzx r12d, byte ptr [rdx + r13]
+
+        sub ebx, eax
+        add ecx, eax
         sub ebx, r12d
 
         # bottom right
-        movzx r14d,  byte ptr [rdx + r13 + 1]
-        sub ebx, r14d
-        sub ecx, r14d
+        movzx eax,  byte ptr [rdx + r13 + 1]
+        
+        sub ebx, eax
+        sub ecx, eax
 
         # calculate sqrt(gx * gx + gy * gy)
         # convert to float
@@ -137,25 +139,23 @@ heightloop:
         cmovg edx, eax  # if higher than 255 change to 255
         mov byte ptr [r9 + rsi], dl # write result
 
-        # loop increment and condition check
+        # widthloop increment and condition check
         inc rsi
-        cmp rsi, r10
+        cmp rsi, r10    # rsi < width - 1
         jb widthloop
 
     # increment output and input pointers to the next row
-    lea r8, [r8 + r13]
-    mov r12, qword ptr [rdi + PARAM_OUT_BPL]
-    lea r9, [r9 + r12]
+    lea r8, [r8 + r13]  # startRow + inBytesPerLine
+    mov rax, qword ptr [rdi + PARAM_OUT_BPL]
+    lea r9, [r9 + rax]  # startRow + outBytesPerLine
 
-    # loop increment and condition check
+    # heightloop increment and condition check
     inc r11
-    cmp r11, qword ptr [rdi + PARAM_END]
+    cmp r11, qword ptr [rdi + PARAM_END]    # startRow < endRow
     jb heightloop
-
 
 ret_and_restore_stack:
     # restore stack and return 0
-    pop r14
     pop r13
     pop r12
     pop rbx

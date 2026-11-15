@@ -115,15 +115,11 @@ heightloop:
         sub ecx, eax
 
         # calculate sqrt(gx * gx + gy * gy)
+        imul ebx, ebx
+        imul ecx, ecx
+        add ebx, ecx
         # convert to float
         cvtsi2ss xmm0, ebx
-        cvtsi2ss xmm1, ecx
-        # square numbers
-        mulss xmm0, xmm0
-        mulss xmm1, xmm1
-
-        addss xmm0, xmm1
-
         sqrtss xmm0, xmm0
 
         # multiply by amount

@@ -63,7 +63,12 @@
        <widget class="QComboBox" name="implementationPicker">
         <item>
          <property name="text">
-          <string>ASM x64 implementation</string>
+          <string>ASM x64 Scalar implementation</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>ASM x64 SIMD implementation</string>
          </property>
         </item>
         <item>

@@ -87,8 +87,10 @@ void MainWindow::startEdgeDetcetion() {
     }
     
     detect_edges_worker worker;
-    if (_ui->implementationPicker->currentIndex() == 0) // asm implementation
+    if (_ui->implementationPicker->currentIndex() == 0) // asm scalar
         worker = asmDetectEdgesWorker;
+    else if (_ui->implementationPicker->currentIndex() == 1) // asm SIMD
+        worker = asmDetectEdgesSIMDWorker;
     else // c implementation
         worker = cDetectEdgesWorker;
         

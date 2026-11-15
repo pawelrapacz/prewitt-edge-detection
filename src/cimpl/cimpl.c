@@ -65,7 +65,7 @@ int cDetectEdgesWorker(detect_edges_params* p) {
             int32_t gx = tl + cl + bl - tr - cr - br;
 
 
-            int32_t magnitude = hypotf(gx, gy) * amount;
+            int32_t magnitude = sqrt(gx * gx + gy * gy) * amount;
             size_t pidx = p->outBytesPerLine * j + i;
 
             if (magnitude < 255)

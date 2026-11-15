@@ -3,6 +3,7 @@ add_library(asmimpl SHARED
     detect_edges_params_offsets.inc
     asmDetectEdges.s
     asmDetectEdgesWorker.s
+    asmDetectEdgesSIMDWorker.s
     gray.s
 )
 

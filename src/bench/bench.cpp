@@ -17,6 +17,7 @@
  */
 
 #include "bench.h"
+#include "core.h"
 
 #include <mutex>
 #include <string>
@@ -61,7 +62,7 @@ void bench::bench(std::string_view path, std::string_view label, uint32_t runs, 
                 auto time = bench::measureTime([&] {
                     output = detectEdgesThreads(width, height, input, bpl, 1., nullptr, w.worker, thrd);
                 });
-                std::free(output);
+                imageBufferFree(output);
 
                 if (i > 0)
                     csv(w.name, label, width, height, thrd, time);

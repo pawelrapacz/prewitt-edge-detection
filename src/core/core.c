@@ -24,26 +24,49 @@
 #include <threads.h>
 #include <string.h>
 
+#ifdef _WIN32
+    #include <malloc.h>
+#endif
 
 uint8_t* imageBufferAlloc(size_t width, size_t height, size_t* bytesPerLine) {
     return alignedImageBufferAlloc(width, height, 4, 4, bytesPerLine);
 }
 
 uint8_t* alignedImageBufferAlloc(size_t width, size_t height, size_t dataAlign, size_t addrAlign, size_t* bytesPerLine) {
-    if (dataAlign == 0 || addrAlign == 0 || bytesPerLine == nullptr)
-        return nullptr;
+    if (width == 0 || height == 0 ||dataAlign == 0 || addrAlign == 0 || bytesPerLine == NULL)
+        return NULL;
+
+
+    if (width > SIZE_MAX - dataAlign + 1)
+        return NULL;
 
     size_t _bytesPerLine = (width + dataAlign - 1) / dataAlign * dataAlign;
-    *bytesPerLine = _bytesPerLine;
-    size_t size = (_bytesPerLine * width + addrAlign - 1) / addrAlign * addrAlign;
 
-         
+    if (_bytesPerLine > (SIZE_MAX - addrAlign + 1) / height)
+        return NULL;
+
+    size_t size = (_bytesPerLine * height + addrAlign - 1) / addrAlign * addrAlign;
+    
+#ifdef _WIN32
+    void* ptr = _aligned_malloc(size, addrAlign);
+#else
     void* ptr = aligned_alloc(addrAlign, size);
+#endif
 
-    if (ptr != nullptr)
+    if (ptr != NULL) {
+        *bytesPerLine = _bytesPerLine;
         memset(ptr, 0, size);
+    }
 
     return ptr;
+}
+
+void imageBufferFree(void* ptr) {
+#ifdef _WIN32
+    _aligned_free(ptr);
+#else
+    free(ptr);
+#endif
 }
 
 
@@ -60,19 +83,19 @@ static inline int workerWrapper(void* p) {
 }
 
 uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker) {
-    if (input == nullptr) return nullptr;
-    if (width * height == 0) return nullptr;
+    if (input == NULL) return NULL;
+    if (width * height == 0) return NULL;
 
     uint32_t size = width * height;
     if (size == 0)
-        return nullptr;
+        return NULL;
 
     size_t obpl;
     uint8_t* output = imageBufferAlloc(width, height, &obpl);
 
-    if (output == nullptr) return nullptr;
+    if (output == NULL) return NULL;
 
-    if (outBytesPerLine != nullptr)
+    if (outBytesPerLine != NULL)
         *outBytesPerLine = obpl;
     
     detect_edges_params params = {
@@ -90,17 +113,17 @@ uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t b
     int res = worker(&params);
 
     if (res != 0) {
-        free(output);
-        return nullptr;
+        imageBufferFree(output);
+        return NULL;
     }
 
     return output;
 }
 
 uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker, uint32_t threads) {
-    if (threads == 0) return nullptr;
-    if (input == nullptr) return nullptr;
-    if (width * height == 0) return nullptr;
+    if (threads == 0) return NULL;
+    if (input == NULL) return NULL;
+    if (width * height == 0) return NULL;
 
     size_t obpl;
     uint8_t* output = imageBufferAlloc(width, height, &obpl);
@@ -110,13 +133,13 @@ uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, s
 
     if (!(output && params && wparams && thrd)) {
         free(wparams);
-        free(output);
+        imageBufferFree(output);
         free(params);
         free(thrd);
-        return nullptr;
+        return NULL;
     }
 
-    if (outBytesPerLine != nullptr)
+    if (outBytesPerLine != NULL)
         *outBytesPerLine = obpl;
 
     uint32_t created = 0;
@@ -145,7 +168,7 @@ uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, s
     }
 
     for (uint32_t i = 0; i < created; i++) {
-        thrd_join(thrd[i], nullptr);
+        thrd_join(thrd[i], NULL);
     }
 
     free(wparams);
@@ -153,7 +176,7 @@ uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, s
     free(thrd);
 
     if (created != threads)
-        return nullptr;
+        return NULL;
     else
         return output;
 }

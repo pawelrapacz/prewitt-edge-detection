@@ -1,7 +1,7 @@
 add_library(asmimpl SHARED
     asmimpl.h
     
-    $<$<AND:$<PLATFORM_ID:Linux>,$<C_COMPILER_ID:GNU,Clang>>:
+    $<$<PLATFORM_ID:Linux>:
         linux/asmDetectEdges.s
         linux/detect_edges_params_offsets.inc
         linux/asmDetectEdgesWorker.s
@@ -9,15 +9,14 @@ add_library(asmimpl SHARED
         linux/gray.s
     >
 
-    $<$<AND:$<PLATFORM_ID:Windows>,$<C_COMPILER_ID:MSVC>>:
+    $<$<PLATFORM_ID:Windows>:
     >
 )
-
 
 target_include_directories(asmimpl PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}
 PRIVATE
-    $<$<PLATFORM_ID:Linux,Darwin>:${CMAKE_CURRENT_SOURCE_DIR}/linux>
+    $<$<PLATFORM_ID:Linux>:${CMAKE_CURRENT_SOURCE_DIR}/linux>
     $<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_SOURCE_DIR}/windows>
 )
 

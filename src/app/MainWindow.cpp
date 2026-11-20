@@ -152,12 +152,12 @@ void MainWindow::startEdgeDetcetion() {
             height,
             bytesPerLine,
             QImage::Format_Grayscale8,
-            free,
+            imageBufferFree,
             output
         );
 
         if (_resultImage.isNull())
-            free(output);
+            imageBufferFree(output);
 
         drawImage(_resultImage, *(_ui->resultImageLabel));
     }

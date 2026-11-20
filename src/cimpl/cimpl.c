@@ -26,13 +26,13 @@
 
 
 uint8_t* cGrayScale(uint32_t width, uint32_t height, const rgb_t* input) {
-    if (input == nullptr)
-        return nullptr;
+    if (input == NULL)
+        return NULL;
 
     uint8_t* result = malloc(width * height);
 
-    if (result == nullptr)
-        return nullptr;
+    if (result == NULL)
+        return NULL;
     
     for (uint32_t i = 0; i < width * height; i++) {
         rgb_t pix = input[i];
@@ -48,10 +48,10 @@ uint8_t* cDetectEdges(size_t width, size_t height, const uint8_t* input, size_t 
 
 
 int cDetectEdgesWorker(detect_edges_params* p) {
-    if (p->input == nullptr)
+    if (p->input == NULL)
         return -1;
 
-    if (p->output == nullptr)
+    if (p->output == NULL)
         return -1;
 
     size_t size = p->width * p->height;
@@ -92,6 +92,5 @@ int cDetectEdgesWorker(detect_edges_params* p) {
                 p->output[pidx] = 255;
         }
     }
-
     return 0;
 }

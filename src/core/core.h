@@ -45,6 +45,8 @@ uint8_t* imageBufferAlloc(size_t width, size_t height, size_t* bytesPerLine);
 
 uint8_t* alignedImageBufferAlloc(size_t width, size_t height, size_t dataAlign, size_t addrAlign, size_t* bytesPerLine);
 
+void imageBufferFree(void* ptr);
+
 uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker);
 
 uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker, uint32_t threads);

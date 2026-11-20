@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.31)
-project(prewitt-edge-detection LANGUAGES CXX C ASM ASM_MASM)
+project(prewitt-edge-detection LANGUAGES CXX C)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    enable_language(ASM)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    enable_language(ASM_MASM)
+else()
+    message(FATAL_ERROR "Platform ${CMAKE_SYSTEM_NAME} is not supported!\nSupported platforms: Linux, Windows.")
+endif()
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release MinSizeRel)
 

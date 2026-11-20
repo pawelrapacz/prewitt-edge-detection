@@ -20,27 +20,10 @@
 
 #include <core.h>
 
-#include <stdlib.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <math.h>
 
-
-uint8_t* cGrayScale(uint32_t width, uint32_t height, const rgb_t* input) {
-    if (input == NULL)
-        return NULL;
-
-    uint8_t* result = malloc(width * height);
-
-    if (result == NULL)
-        return NULL;
-    
-    for (uint32_t i = 0; i < width * height; i++) {
-        rgb_t pix = input[i];
-        result[i] = (uint8_t)(0.299f * pix.r + 0.587f * pix.g + 0.114f * pix.b);
-    }
-
-    return result;
-}
 
 uint8_t* cDetectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine) {
     return detectEdges(width, height, input, bytesPerLine, amount, outBytesPerLine, cDetectEdgesWorker);

@@ -6,7 +6,6 @@ add_library(asmimpl SHARED
         linux/detect_edges_params_offsets.inc
         linux/asmDetectEdgesWorker.s
         linux/asmDetectEdgesSIMDWorker.s
-        linux/gray.s
     >
 
     $<$<PLATFORM_ID:Windows>:

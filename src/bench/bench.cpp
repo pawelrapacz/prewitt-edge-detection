@@ -17,7 +17,8 @@
  */
 
 #include "bench.h"
-#include "core.h"
+
+#include <core.h>
 
 #include <mutex>
 #include <string>

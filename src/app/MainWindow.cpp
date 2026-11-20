@@ -65,11 +65,18 @@ void MainWindow::loadImage(const QString &path) {
     if (path.isEmpty())
         return;
 
+    _inputImage = QImage(path);
+    _resultImage = QImage();
+    
+    if (_inputImage.isNull()) {
+        QMessageBox::warning(this, "Image not loaded", "Failed to load image:\n" + path);
+        return;
+    }
+    
     _inputImagePath = path;
-    _inputImage = QImage(_inputImagePath);
-
     _ui->imageSize->setText(QString("Image size: %1x%2").arg(_inputImage.width()).arg(_inputImage.height()));
     _ui->pathEdit->setText(_inputImagePath);
+    drawImage(_resultImage, *(_ui->resultImageLabel));
     drawImage(_inputImage, *(_ui->inputImageLabel));
 }
 
@@ -87,7 +94,7 @@ void MainWindow::loadImageFromPath() {
         return;
     }
 
-    loadImage(_ui->pathEdit->text());
+    loadImage(fileInfo.filePath());
 }
 
 
@@ -99,7 +106,7 @@ void MainWindow::loadImageFromDialog() {
 
 void MainWindow::startEdgeDetcetion() {
     if (_inputImage.isNull()) {
-        QMessageBox::information(this, "Choose a file", "To start edge detection first choose a file.");
+        QMessageBox::information(this, "Image not loaded", "To start edge detection first choose a file.");
         return;
     }
     
@@ -116,13 +123,13 @@ void MainWindow::startEdgeDetcetion() {
     int threads = _ui->threadCountBox->value();
 
     if (threads < 1 || threads > 64) {
-        QMessageBox::warning(this, "Error", "Thread count can be set from 1 to 64.");
+        QMessageBox::warning(this, "Invalid value", "Thread count can be set from 1 to 64.");
         return;
     }
 
     double amount = _ui->amountSpinBox->value();
     if (amount < 1. || amount > 10.) {
-        QMessageBox::warning(this, "Error", "Amount can be set from 1 to 10.");
+        QMessageBox::warning(this, "Invalid value", "Amount can be set from 1 to 10.");
         return;
     }
 
@@ -158,7 +165,7 @@ void MainWindow::startEdgeDetcetion() {
 
 void MainWindow::saveImage() {
     if (_resultImage.isNull()) {
-        QMessageBox::information(this, "No image", "No image to save!");
+        QMessageBox::information(this, "Image not saved", "No image to save!");
         return;
     }
 
@@ -168,17 +175,17 @@ void MainWindow::saveImage() {
         return;
 
     if (!_resultImage.save(path))
-        QMessageBox::warning(this, "Failure", "Could not save file: " + path);
+        QMessageBox::warning(this, "Image not saved", "Could not save file: " + path);
 }
 
 void MainWindow::drawImage(const QImage& image, QLabel& label) {
-    if (image.isNull()) return;
-
-    label.setPixmap(QPixmap::fromImage(image).scaled(
-        label.size(),
-        Qt::KeepAspectRatio,
-        Qt::SmoothTransformation
-    ));
+    if (!image.isNull()) {
+        label.setPixmap(QPixmap::fromImage(image).scaled(
+            label.size(),
+            Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+        ));
+    }
 }
 
 

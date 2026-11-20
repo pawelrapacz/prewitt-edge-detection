@@ -21,7 +21,6 @@
 #include "utils.h"
 
 #include <QMimeData>
-#include <QPixmap>
 
 ImageLabel::ImageLabel(QWidget *parent)
     : QLabel(parent)

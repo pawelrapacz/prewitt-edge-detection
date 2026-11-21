@@ -18,17 +18,30 @@
 
 #pragma once
 
+#ifdef _WIN32
+    #ifdef CIMPL_STATIC
+        #define CIMPL_API
+    #elif defined(CIMPL_BUILDING)
+        #define CIMPL_API __declspec(dllexport)
+    #else
+        #define CIMPL_API __declspec(dllimport)
+    #endif
+#else
+    #define CIMPL_API __attribute__((visibility("default")))
+#endif
+
 #include <core.h>
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-uint8_t* cDetectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine);
+CIMPL_API uint8_t* cDetectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine);
 
-int cDetectEdgesWorker(detect_edges_params* params);
+CIMPL_API int cDetectEdgesWorker(detect_edges_params* params);
 
 #ifdef __cplusplus
 }

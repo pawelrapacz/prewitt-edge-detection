@@ -18,6 +18,18 @@
 
 #pragma once
 
+#ifdef _WIN32
+    #ifdef CORE_STATIC
+        #define CORE_API
+    #elif defined(CORE_BUILDING)
+        #define CORE_API __declspec(dllexport)
+    #else
+        #define CORE_API __declspec(dllimport)
+    #endif
+#else
+    #define CORE_API __attribute__((visibility("default")))
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -41,15 +53,15 @@ typedef struct {
 
 typedef int (*detect_edges_worker)(detect_edges_params*);
 
-uint8_t* imageBufferAlloc(size_t width, size_t height, size_t* bytesPerLine);
+CORE_API uint8_t* imageBufferAlloc(size_t width, size_t height, size_t* bytesPerLine);
 
-uint8_t* alignedImageBufferAlloc(size_t width, size_t height, size_t dataAlign, size_t addrAlign, size_t* bytesPerLine);
+CORE_API uint8_t* alignedImageBufferAlloc(size_t width, size_t height, size_t dataAlign, size_t addrAlign, size_t* bytesPerLine);
 
-void imageBufferFree(void* ptr);
+CORE_API void imageBufferFree(void* ptr);
 
-uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker);
+CORE_API uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker);
 
-uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker, uint32_t threads);
+CORE_API uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker, uint32_t threads);
 
 #ifdef __cplusplus
 }

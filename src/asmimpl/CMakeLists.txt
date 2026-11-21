@@ -18,5 +18,5 @@ PRIVATE
     $<$<PLATFORM_ID:Linux>:${CMAKE_CURRENT_SOURCE_DIR}/linux>
     $<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_SOURCE_DIR}/windows>
 )
-
+target_compile_definitions(asmimpl PRIVATE ASMIMPL_BUILDING)
 target_link_libraries(asmimpl PUBLIC core)

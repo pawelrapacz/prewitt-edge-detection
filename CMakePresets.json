@@ -1,0 +1,95 @@
+{
+    "$schema": "https://cmake.org/cmake/help/latest/_downloads/3e2d73bff478d88a7de0de736ba5e361/schema.json",
+    "version": 10,
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "generator": "Ninja Multi-Config",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_CONFIGURATION_TYPES": "Debug;Release;MinSizeRel"
+            }
+        },
+        {
+            "name": "san-gcc",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++"
+            }
+        },
+        {
+            "name": "default",
+            "displayName": "Default",
+            "inherits": "base"
+        },
+        {
+            "name": "asan",
+            "displayName": "AddressSanitizer + UndefinedBehaviorSanitizer with gcc",
+            "inherits": "san-gcc",
+            "cacheVariables": {
+                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,leak,undefined",
+                "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,leak,undefined",
+                "CMAKE_MODULE_LINKER_FLAGS": "-fsanitize=address,leak,undefined",
+                "CMAKE_C_FLAGS": "-fsanitize=address,leak,undefined -fno-omit-frame-pointer",
+                "CMAKE_CXX_FLAGS": "-fsanitize=address,leak,undefined -fno-omit-frame-pointer"
+            }
+        },
+        {
+            "name": "tsan",
+            "displayName": "ThreadSanitizer with gcc",
+            "inherits": "san-gcc",
+            "cacheVariables": {
+                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=thread",
+                "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=thread",
+                "CMAKE_MODULE_LINKER_FLAGS": "-fsanitize=thread",
+                "CMAKE_C_FLAGS": "-fsanitize=thread",
+                "CMAKE_CXX_FLAGS": "-fsanitize=thread"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "parallel",
+            "hidden": true,
+            "jobs": 0
+        },
+        {
+            "name": "debug",
+            "displayName": "Default Debug",
+            "inherits": "parallel",
+            "configuration": "Debug",
+            "configurePreset": "default"
+        },
+        {
+            "name": "release",
+            "displayName": "Default Release",
+            "inherits": "parallel",
+            "configuration": "Release",
+            "configurePreset": "default"
+        },
+        {
+            "name": "minsizerel",
+            "displayName": "Default MinSizeRel",
+            "inherits": "parallel",
+            "configuration": "MinSizeRel",
+            "configurePreset": "default"
+        },
+        {
+            "name": "asan",
+            "displayName": "AddressSanitizer + UndefinedBehaviorSanitizer with gcc",
+            "inherits": "parallel",
+            "configurePreset": "asan"
+        },
+        {
+            "name": "tsan",
+            "displayName": "ThreadSanitizer with gcc",
+            "inherits": "parallel",
+            "configurePreset": "tsan"
+        }
+    ]
+}

@@ -16,3 +16,4 @@ img/
 *.exe
 
 CMakeSettings.json
+CMakeUserPresets.json

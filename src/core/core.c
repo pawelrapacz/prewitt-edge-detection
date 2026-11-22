@@ -95,9 +95,6 @@ uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t b
 
     if (output == NULL) return NULL;
 
-    if (outBytesPerLine != NULL)
-        *outBytesPerLine = obpl;
-    
     detect_edges_params params = {
         input,
         output,
@@ -116,6 +113,9 @@ uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t b
         imageBufferFree(output);
         return NULL;
     }
+
+    if (outBytesPerLine != NULL)
+        *outBytesPerLine = obpl;
 
     return output;
 }
@@ -138,9 +138,6 @@ uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, s
         free(thrd);
         return NULL;
     }
-
-    if (outBytesPerLine != NULL)
-        *outBytesPerLine = obpl;
 
     uint32_t created = 0;
     for (uint32_t i = 0; i < threads; i++) {
@@ -175,8 +172,13 @@ uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, s
     free(params);
     free(thrd);
 
-    if (created != threads)
+    if (created != threads) {
+        imageBufferFree(output);
         return NULL;
-    else
-        return output;
+    }
+
+    if (outBytesPerLine != NULL)
+        *outBytesPerLine = obpl;
+    
+    return output;
 }

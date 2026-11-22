@@ -68,7 +68,6 @@ void MainWindow::loadImage(const QString &path) {
         return;
 
     _inputImage = QImage(path);
-    _resultImage = QImage();
     
     if (_inputImage.isNull()) {
         QMessageBox::warning(this, "Image not loaded", "Failed to load image:\n" + path);
@@ -78,7 +77,6 @@ void MainWindow::loadImage(const QString &path) {
     _inputImagePath = path;
     _ui->imageSize->setText(QString("Image size: %1x%2").arg(_inputImage.width()).arg(_inputImage.height()));
     _ui->pathEdit->setText(_inputImagePath);
-    drawImage(_resultImage, *(_ui->resultImageLabel));
     drawImage(_inputImage, *(_ui->inputImageLabel));
 }
 

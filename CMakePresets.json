@@ -3,10 +3,10 @@
     "version": 10,
     "configurePresets": [
         {
-            "name": "base",
-            "hidden": true,
+            "name": "default",
+            "displayName": "Default",
             "generator": "Ninja Multi-Config",
-            "binaryDir": "${sourceDir}/build/${presetName}",
+            "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_CONFIGURATION_TYPES": "Debug;Release;MinSizeRel"
             }
@@ -19,13 +19,9 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "gcc",
-                "CMAKE_CXX_COMPILER": "g++"
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "OFF"
             }
-        },
-        {
-            "name": "default",
-            "displayName": "Default",
-            "inherits": "base"
         },
         {
             "name": "asan",

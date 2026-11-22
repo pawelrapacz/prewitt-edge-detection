@@ -2,13 +2,17 @@ add_library(asmimpl SHARED
     asmimpl.h
     
     $<$<PLATFORM_ID:Linux>:
-        linux/asmDetectEdges.s
         linux/detect_edges_params_offsets.inc
+        linux/asmDetectEdges.s
         linux/asmDetectEdgesWorker.s
         linux/asmDetectEdgesSIMDWorker.s
     >
 
     $<$<PLATFORM_ID:Windows>:
+        windows/asmimpl.def
+        windows/asmDetectEdges.asm
+        windows/asmDetectEdgesWorker.asm
+        windows/asmDetectEdgesSIMDWorker.asm
     >
 )
 

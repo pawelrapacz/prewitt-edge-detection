@@ -40,12 +40,12 @@ uint8_t* alignedImageBufferAlloc(size_t width, size_t height, size_t dataAlign, 
     if (width > SIZE_MAX - dataAlign + 1)
         return NULL;
 
-    size_t _bytesPerLine = (width + dataAlign - 1) / dataAlign * dataAlign;
+    const size_t _bytesPerLine = (width + dataAlign - 1) / dataAlign * dataAlign;
 
     if (_bytesPerLine > (SIZE_MAX - addrAlign + 1) / height)
         return NULL;
 
-    size_t size = (_bytesPerLine * height + addrAlign - 1) / addrAlign * addrAlign;
+   const size_t size = (_bytesPerLine * height + addrAlign - 1) / addrAlign * addrAlign;
     
 #ifdef _WIN32
     void* ptr = _aligned_malloc(size, addrAlign);
@@ -86,10 +86,6 @@ uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t b
     if (input == NULL) return NULL;
     if (width * height == 0) return NULL;
 
-    uint32_t size = width * height;
-    if (size == 0)
-        return NULL;
-
     size_t obpl;
     uint8_t* output = imageBufferAlloc(width, height, &obpl);
 
@@ -107,9 +103,9 @@ uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t b
         height - 1
     };
 
-    int res = worker(&params);
+    const int res = worker(&params);
 
-    if (res != 0) {
+    if (res != CORE_WORKER_SUCCESS) {
         imageBufferFree(output);
         return NULL;
     }
@@ -157,22 +153,27 @@ uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, s
         wparams[i].worker_func = worker;
         wparams[i].worker_params = &params[i];
 
-        int status = thrd_create(&thrd[i], workerWrapper, &wparams[i]);
+        const int status = thrd_create(&thrd[i], workerWrapper, &wparams[i]);
         if (status != thrd_success)
             break;
         else
             created++;
     }
 
+    bool fail = false;
     for (uint32_t i = 0; i < created; i++) {
-        thrd_join(thrd[i], NULL);
+        int res;
+        const int status = thrd_join(thrd[i], &res);
+        
+        if (status != thrd_success || res != CORE_WORKER_SUCCESS)
+            fail = true;
     }
 
     free(wparams);
     free(params);
     free(thrd);
 
-    if (created != threads) {
+    if (created != threads || fail) {
         imageBufferFree(output);
         return NULL;
     }

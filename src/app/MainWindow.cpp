@@ -25,6 +25,8 @@
 #include <asmimpl.h>
 #include <cimpl.h>
 
+#include <utility>
+
 #include <QLabel>
 #include <QImageReader>
 #include <QImage>
@@ -118,47 +120,48 @@ void MainWindow::startEdgeDetcetion() {
     else // c implementation
         worker = cDetectEdgesWorker;
         
-    int width = _inputImage.width();
-    int height = _inputImage.height();
-    int threads = _ui->threadCountBox->value();
+    const int width = _inputImage.width();
+    const int height = _inputImage.height();
+    const int threads = _ui->threadCountBox->value();
 
     if (threads < 1 || threads > 64) {
         QMessageBox::warning(this, "Invalid value", "Thread count can be set from 1 to 64.");
         return;
     }
 
-    double amount = _ui->amountSpinBox->value();
+    const double amount = _ui->amountSpinBox->value();
     if (amount < 1. || amount > 10.) {
         QMessageBox::warning(this, "Invalid value", "Amount can be set from 1 to 10.");
         return;
     }
 
     size_t bytesPerLine {};
-    QImage gray = _inputImage.convertToFormat(QImage::Format_Grayscale8);
+    const QImage gray = _inputImage.convertToFormat(QImage::Format_Grayscale8);
         
     _timer.start();
         
-    uint8_t* output = detectEdgesThreads(width, height, gray.bits(), gray.bytesPerLine(), amount, &bytesPerLine, worker, threads);
+    uint8_t* output = detectEdgesThreads(width, height, gray.constBits(), gray.bytesPerLine(), amount, &bytesPerLine, worker, threads);
 
     auto timeNs = _timer.nsecsElapsed();
     _ui->time->setText(
         QString("%1").arg(timeNs / 1e6, 0, 'f', 3)
     );
 
-    if (output) {
-        _resultImage = QImage(
-            output,
-            width,
-            height,
-            bytesPerLine,
-            QImage::Format_Grayscale8,
-            imageBufferFree,
-            output
-        );
+    QImage processed(
+        output,
+        width,
+        height,
+        bytesPerLine,
+        QImage::Format_Grayscale8,
+        imageBufferFree,
+        output
+    );
 
-        if (_resultImage.isNull())
-            imageBufferFree(output);
-
+    if (processed.isNull()) {
+        imageBufferFree(output); // free if image construction failed
+        QMessageBox::critical(this, "Image not processed", "An error occured.\nFailed to process the image.");
+    } else {
+        _resultImage = std::move(processed);
         drawImage(_resultImage, *(_ui->resultImageLabel));
     }
 }

@@ -24,6 +24,7 @@
 #include <ratio>
 #include <chrono>
 #include <string>
+#include <string_view>
 #include <format>
 #include <functional>
 
@@ -55,17 +56,19 @@ namespace bench {
 
     class progress {
     public:
-        progress(uint32_t max_val, const std::string& text = {}, char fill = '#');
+        progress(uint32_t max_val, std::string_view text = {}, char fill = '#', uint32_t barlenght = 40);
         ~progress();
 
         void notify();
         void notify(uint32_t increment);
         void operator++();
         void operator++(int);
-
+    
+    private:
         uint32_t val;
         uint32_t max_val;
         std::string text;
+        std::string bar;
         char fill = '#';
     };
 

@@ -32,14 +32,14 @@ uint8_t* cDetectEdges(size_t width, size_t height, const uint8_t* input, size_t 
 
 int cDetectEdgesWorker(detect_edges_params* p) {
     if (p->input == NULL)
-        return -1;
+        return CORE_WORKER_FAIL;
 
     if (p->output == NULL)
-        return -1;
+        return CORE_WORKER_FAIL;
 
     size_t size = p->width * p->height;
     if (size == 0)
-        return -1;
+        return CORE_WORKER_FAIL;
     
     float amount = p->amount;
     size_t shift = p->inBytesPerLine;
@@ -75,5 +75,6 @@ int cDetectEdgesWorker(detect_edges_params* p) {
                 p->output[pidx] = 255;
         }
     }
-    return 0;
+    
+    return CORE_WORKER_SUCCESS;
 }

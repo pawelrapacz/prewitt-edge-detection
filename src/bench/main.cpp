@@ -21,6 +21,8 @@
 #include <cimpl.h>
 #include <asmimpl.h>
 
+#include <print>
+#include <exception>
 #include <fstream>
 
 int main() {
@@ -34,9 +36,14 @@ int main() {
     bench::csv csv;
     uint32_t runs = 10;
 
-    bench::bench("./img/small.jpg", "small", runs, threads, workers, csv);
-    bench::bench("./img/medium.jpg", "medium", runs, threads, workers, csv);
-    bench::bench("./img/large.jpg", "large", runs, threads, workers, csv);
+    try {
+        bench::bench("./img/small.jpg", "small", runs, threads, workers, csv);
+        bench::bench("./img/medium.jpg", "medium", runs, threads, workers, csv);
+        bench::bench("./img/large.jpg", "large", runs, threads, workers, csv);
+    } catch (std::exception &e) {
+        std::println("An error occured what(): {}", e.what());
+        return 1;
+    }
 
     std::ofstream file("bench.csv");
     if (file.is_open())

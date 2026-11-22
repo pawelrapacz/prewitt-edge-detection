@@ -63,6 +63,10 @@ void bench::bench(std::string_view path, std::string_view label, uint32_t runs, 
                 auto time = bench::measureTime([&] {
                     output = detectEdgesThreads(width, height, input, bpl, 1., nullptr, w.worker, thrd);
                 });
+
+                if (output == nullptr)
+                    throw std::runtime_error("processing failed");
+
                 imageBufferFree(output);
 
                 if (i > 0)
@@ -72,25 +76,24 @@ void bench::bench(std::string_view path, std::string_view label, uint32_t runs, 
     }
 }
 
-bench::progress::progress(uint32_t max_val, const std::string& text, char fill)
-    : val(), max_val(max_val), text(text), fill(fill){
+bench::progress::progress(uint32_t max_val, std::string_view text, char fill, uint32_t barlen)
+    : val(), max_val(max_val), text(text), bar(barlen, ' '), fill(fill) {
     std::print(stdout, "\x1b[?25l");
 }
 
 bench::progress::~progress() {
-    // val = max_val;
-    // notify();
     std::println("\x1b[?25h");
 }
 
 void bench::progress::notify() {
-    auto p = val * 100 / max_val;
-    std::string bar(val * 40 / max_val, fill);
+    const auto progress = val * 100 / max_val;
+    const auto pos = val * bar.size() / max_val;
+    bar[pos] = fill;
 
     if (text.empty())
-        std::print("\r[{:<40}] {:>3}%", bar, p);
+        std::print("\r[{}] {:>3}%", bar, progress);
     else
-        std::print("\r{} [{:<40}] {:>3}%", text, bar, p);
+        std::print("\r{} [{}] {:>3}%", text, bar, progress);
 
     std::fflush(stdout);
 }

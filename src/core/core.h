@@ -37,6 +37,9 @@
 extern "C" {
 #endif
 
+#define CORE_WORKER_SUCCESS  0
+#define CORE_WORKER_FAIL    -1
+
 typedef struct {
     uint8_t r, g, b;
 } rgb_t;

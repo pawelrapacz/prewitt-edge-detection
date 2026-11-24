@@ -25,9 +25,6 @@
 #include <asmimpl.h>
 #include <cimpl.h>
 
-#include <qimage.h>
-#include <utility>
-
 #include <QLabel>
 #include <QImageReader>
 #include <QImage>

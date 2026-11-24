@@ -29,24 +29,24 @@
     #include <malloc.h>
 #endif
 
-uint8_t* imageBufferAlloc(size_t width, size_t height, size_t* bytesPerLine) {
-    return alignedImageBufferAlloc(width, height, 4, 4, bytesPerLine);
+uint8_t* imageBufferAlloc(size_t width, size_t height, Format fmt, size_t* bpl) {
+    return alignedImageBufferAlloc(width, height, fmt, 4, 4, bpl);
 }
 
-uint8_t* alignedImageBufferAlloc(size_t width, size_t height, size_t dataAlign, size_t addrAlign, size_t* bytesPerLine) {
-    if (width == 0 || height == 0 ||dataAlign == 0 || addrAlign == 0 || bytesPerLine == NULL)
+uint8_t* alignedImageBufferAlloc(size_t width, size_t height, Format fmt, size_t dataAlign, size_t addrAlign, size_t* bpl) {
+    if (width == 0 || height == 0 ||dataAlign == 0 || addrAlign == 0 || bpl == NULL)
         return NULL;
 
 
-    if (width > SIZE_MAX - dataAlign + 1)
+    if (width > (SIZE_MAX / fmt - dataAlign + 1))
         return NULL;
 
-    const size_t _bytesPerLine = (width + dataAlign - 1) / dataAlign * dataAlign;
+    const size_t _bpl = (width * fmt + dataAlign - 1) / dataAlign * dataAlign;
 
-    if (_bytesPerLine > (SIZE_MAX - addrAlign + 1) / height)
+    if (_bpl > (SIZE_MAX - addrAlign + 1) / height)
         return NULL;
 
-   const size_t size = (_bytesPerLine * height + addrAlign - 1) / addrAlign * addrAlign;
+   const size_t size = (_bpl * height + addrAlign - 1) / addrAlign * addrAlign;
     
 #ifdef _WIN32
     void* ptr = _aligned_malloc(size, addrAlign);
@@ -55,7 +55,7 @@ uint8_t* alignedImageBufferAlloc(size_t width, size_t height, size_t dataAlign, 
 #endif
 
     if (ptr != NULL) {
-        *bytesPerLine = _bytesPerLine;
+        *bpl = _bpl;
         memset(ptr, 0, size);
     }
 
@@ -83,12 +83,12 @@ static inline int workerWrapper(void* p) {
     return params->worker_func(params->worker_params);
 }
 
-uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker) {
+uint8_t* detectEdges(size_t width, size_t height, Format fmt, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker) {
     if (input == NULL) return NULL;
     if (width * height == 0) return NULL;
 
     size_t obpl;
-    uint8_t* output = imageBufferAlloc(width, height, &obpl);
+    uint8_t* output = imageBufferAlloc(width, height, 1, &obpl);
 
     if (output == NULL) return NULL;
 
@@ -100,6 +100,7 @@ uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t b
         amount,
         width,
         height,
+        fmt,
         1,
         height - 1
     };
@@ -117,13 +118,13 @@ uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t b
     return output;
 }
 
-uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker, uint32_t threads) {
+uint8_t* detectEdgesThreads(size_t width, size_t height, Format fmt, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker, uint32_t threads) {
     if (threads == 0) return NULL;
     if (input == NULL) return NULL;
     if (width * height == 0) return NULL;
 
     size_t obpl;
-    uint8_t* output = imageBufferAlloc(width, height, &obpl);
+    uint8_t* output = imageBufferAlloc(width, height, fmt, &obpl);
     detect_edges_params* params = malloc(threads * sizeof(detect_edges_params));
     worker_params* wparams = malloc(threads * sizeof(worker_params));
     thrd_t* thrd = malloc(threads * sizeof(thrd_t));
@@ -145,6 +146,7 @@ uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, s
         params[i].width = width;
         params[i].height = height;
         params[i].amount = amount;
+        params[i].fmt = fmt;
         params[i].start = height * i / threads;
         params[i].end = height * (i + 1) / threads;
 

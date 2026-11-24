@@ -40,9 +40,10 @@ extern "C" {
 #define CORE_WORKER_SUCCESS  0
 #define CORE_WORKER_FAIL    -1
 
-typedef struct {
-    uint8_t r, g, b;
-} rgb_t;
+typedef enum : size_t {
+    GRAY    = 1,
+    RGB     = 3
+} Format;
 
 typedef struct {            // offset
     const uint8_t* input;   //  0
@@ -52,21 +53,22 @@ typedef struct {            // offset
     double amount;          // 32
     size_t width;           // 40
     size_t height;          // 48
-    size_t start;           // 56
-    size_t end;             // 64
+    Format fmt;             // 56
+    size_t start;           // 64
+    size_t end;             // 72
 } detect_edges_params;
 
 typedef int (*detect_edges_worker)(detect_edges_params*);
 
-CORE_API uint8_t* imageBufferAlloc(size_t width, size_t height, size_t* bytesPerLine);
+CORE_API uint8_t* imageBufferAlloc(size_t width, size_t height, Format fmt, size_t* bytesPerLine);
 
-CORE_API uint8_t* alignedImageBufferAlloc(size_t width, size_t height, size_t dataAlign, size_t addrAlign, size_t* bytesPerLine);
+CORE_API uint8_t* alignedImageBufferAlloc(size_t width, size_t height, Format fmt, size_t dataAlign, size_t addrAlign, size_t* bytesPerLine);
 
 CORE_API void imageBufferFree(void* ptr);
 
-CORE_API uint8_t* detectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker);
+CORE_API uint8_t* detectEdges(size_t width, size_t height, Format fmt, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker);
 
-CORE_API uint8_t* detectEdgesThreads(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker, uint32_t threads);
+CORE_API uint8_t* detectEdgesThreads(size_t width, size_t height, Format fmt, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine, detect_edges_worker worker, uint32_t threads);
 
 #ifdef __cplusplus
 }

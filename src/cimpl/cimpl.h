@@ -39,7 +39,7 @@
 extern "C" {
 #endif
 
-CIMPL_API uint8_t* cDetectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine);
+CIMPL_API uint8_t* cDetectEdges(size_t width, size_t height, Format fmt, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine);
 
 CIMPL_API int cDetectEdgesWorker(detect_edges_params* params);
 

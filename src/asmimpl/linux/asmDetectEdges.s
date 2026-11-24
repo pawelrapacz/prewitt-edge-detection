@@ -22,10 +22,13 @@
 .global asmDetectEdges
 .type asmDetectEdges, @function
 
-# uint8_t* asmDetectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine);
+# uint8_t* asmDetectEdges(size_t width, size_t height, Format fmt, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine);
 # width in rdi, height in rsi, input in rdx, bytesPerLine in rcx, amount in xmm0, outBytesPerLine in r8
 asmDetectEdges:
-    mov r9, qword ptr asmDetectEdgesWorker@GOTPCREL[rip]
-    jmp detectEdges@PLT
+    sub rsp, 16
+    push qword ptr asmDetectEdgesWorker@GOTPCREL[rip]
+    call detectEdges@PLT
+    add rsp, 24
+    ret
 
 .size asmDetectEdges, .-asmDetectEdges

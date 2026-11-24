@@ -21,20 +21,29 @@ extern asmDetectEdgesWorker:proc
 
 .code
 
-; uint8_t* asmDetectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine);
+; uint8_t* asmDetectEdges(size_t width, size_t height, Format fmt, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine);
 asmDetectEdges proc frame
-    sub rsp, 48h                ; 20h shadow + 18h na 3 + 10h
+    sub rsp, 48h                    ; 20h shadow + 4 slots to stack + 8 alignment
     .allocstack 48h
     .endprolog
 
-    ; rcx, rdx, r8, r9 leave as is
+    ; rcx, rdx, r8, r9 (args 1-4) no changes
 
-    mov rax, [rsp + 48h + 28h]  ; amount
+    ; 5th arg: bytesPerLine
+    mov rax, [rsp + 48h + 28h]
     mov [rsp + 20h], rax
-    mov rax, [rsp + 48h + 30h]  ; outBytesPerLine
+
+    ; 6th arg: amount (double)
+    mov rax, [rsp + 48h + 30h]
     mov [rsp + 28h], rax
+
+    ; 7th arg: outBytesPerLine
+    mov rax, [rsp + 48h + 38h]
+    mov [rsp + 30h], rax
+
+    ; 8th arg: worker ptr
     lea rax, asmDetectEdgesWorker
-    mov [rsp + 30h], rax        ; worker
+    mov [rsp + 38h], rax
 
     call detectEdges
 

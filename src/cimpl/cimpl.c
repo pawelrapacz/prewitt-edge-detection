@@ -25,8 +25,8 @@
 #include <math.h>
 
 
-uint8_t* cDetectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine) {
-    return detectEdges(width, height, input, bytesPerLine, amount, outBytesPerLine, cDetectEdgesWorker);
+uint8_t* cDetectEdges(size_t width, size_t height, Format fmt, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine) {
+    return detectEdges(width, height, fmt, input, bytesPerLine, amount, outBytesPerLine, cDetectEdgesWorker);
 }
 
 
@@ -43,24 +43,24 @@ int cDetectEdgesWorker(detect_edges_params* p) {
     
     float amount = p->amount;
     size_t shift = p->inBytesPerLine;
+    size_t ch = p->fmt; // channels
 
     for (size_t j = p->start; j < p->end; j++) {
-        for (size_t i = 1; i < p->width - 1; i++) {
-
+        for (size_t i = ch; i < (p->width - 1) * ch; i++) {
             size_t pos = p->inBytesPerLine * j + i;
             size_t upperRow = pos - shift;
             size_t lowerRow = pos + shift;
 
-            uint8_t tl = p->input[upperRow - 1];
+            uint8_t tl = p->input[upperRow - ch];
             uint8_t tc = p->input[upperRow];
-            uint8_t tr = p->input[upperRow + 1];
+            uint8_t tr = p->input[upperRow + ch];
 
-            uint8_t cl = p->input[pos - 1];
-            uint8_t cr = p->input[pos + 1];
+            uint8_t cl = p->input[pos - ch];
+            uint8_t cr = p->input[pos + ch];
 
-            uint8_t bl = p->input[lowerRow - 1];
+            uint8_t bl = p->input[lowerRow - ch];
             uint8_t bc = p->input[lowerRow];
-            uint8_t br = p->input[lowerRow + 1];
+            uint8_t br = p->input[lowerRow + ch];
 
             int32_t gy = tl + tc + tr - bl - bc - br;
             int32_t gx = tl + cl + bl - tr - cr - br;
@@ -75,6 +75,6 @@ int cDetectEdgesWorker(detect_edges_params* p) {
                 p->output[pidx] = 255;
         }
     }
-    
+
     return CORE_WORKER_SUCCESS;
 }

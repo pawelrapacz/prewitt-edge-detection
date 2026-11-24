@@ -134,11 +134,12 @@ void MainWindow::startEdgeDetcetion() {
     }
 
     size_t bytesPerLine {};
-    const QImage gray = _inputImage.convertToFormat(QImage::Format_Grayscale8);
+    // const QImage gray = _inputImage.convertToFormat(QImage::Format_Grayscale8);
+    const QImage gray = _inputImage.convertToFormat(QImage::Format_RGB888);
         
     _timer.start();
         
-    uint8_t* output = detectEdgesThreads(width, height, gray.constBits(), gray.bytesPerLine(), amount, &bytesPerLine, worker, threads);
+    uint8_t* output = detectEdgesThreads(width, height, RGB, gray.constBits(), gray.bytesPerLine(), amount, &bytesPerLine, worker, threads);
 
     auto timeNs = _timer.nsecsElapsed();
     _ui->time->setText(
@@ -150,7 +151,7 @@ void MainWindow::startEdgeDetcetion() {
         width,
         height,
         bytesPerLine,
-        QImage::Format_Grayscale8,
+        QImage::Format_RGB888,
         imageBufferFree,
         output
     );

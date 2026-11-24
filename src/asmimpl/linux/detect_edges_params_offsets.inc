@@ -23,5 +23,6 @@
 .equ PARAM_AMOUNT,         32
 .equ PARAM_WIDTH,          40
 .equ PARAM_HEIGHT,         48
-.equ PARAM_START,          56
-.equ PARAM_END,            64
+.equ PARAM_FMT,            56
+.equ PARAM_START,          64
+.equ PARAM_END,            72

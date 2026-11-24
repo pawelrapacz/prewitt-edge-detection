@@ -16,12 +16,13 @@
 ;      Created GUI app and benchmark with core functionality.
 ;
 
-PARAM_INPUT    equ   0
-PARAM_OUTPUT   equ   8
-PARAM_IN_BPL   equ  16
-PARAM_OUT_BPL  equ  24
-PARAM_AMOUNT   equ  32
-PARAM_WIDTH    equ  40
-PARAM_HEIGHT   equ  48
-PARAM_START    equ  56
-PARAM_END      equ  64
+PARAM_INPUT         equ  0
+PARAM_OUTPUT        equ  8
+PARAM_IN_BPL        equ 16
+PARAM_OUT_BPL       equ 24
+PARAM_AMOUNT        equ 32
+PARAM_WIDTH         equ 40
+PARAM_HEIGHT        equ 48
+PARAM_FMT           equ 56
+PARAM_START         equ 64
+PARAM_END           equ 72

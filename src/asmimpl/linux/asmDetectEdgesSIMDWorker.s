@@ -51,20 +51,27 @@ asmDetectEdgesSIMDWorker:
     cmp r11, qword ptr [rdi + PARAM_END]    # end row
     jnb ret_no_cleanup
 
-    # check 1 < width - 1
-    sub r10, 1 # width - 1 in r10
-    cmp r10, 1
-    jbe ret_no_cleanup
-
-    # width - 4 in r14
-    mov r14, r10
-    sub r14, 3
-
     # save stack
     push rbx
     push r12
     push r13
     push r14
+    push r15
+
+    mov r15, qword ptr [rdi + PARAM_FMT] # channels in r15
+
+    # check 1 < (width - 1) * channels
+    mov rax, r10
+    sub rax, 1 # width - 1 in r10
+    mul r15
+    cmp rax, 1
+    jbe ret_and_restore_stack
+
+    mov r10, rax
+
+    # (width - 1) * 3 - 4 in r14
+    mov r14, r10
+    sub r14, 3
 
     mov r13, qword ptr [rdi + PARAM_IN_BPL]
 
@@ -85,40 +92,42 @@ asmDetectEdgesSIMDWorker:
     lea r9, [r9 + rax]  # out address in r8
 
 heightloop:
-    mov rsi, 1  # start inside loop
+    mov rsi, r15 # start from channel to omit the first pixel
 
     widthloop:
-        cmp rsi, r14    # rsi < width - 4
+        cmp rsi, r14    # rsi < width * 3 - 4
         jae leftover
 
         # break false dependency
         xorps xmm0, xmm0
         xorps xmm1, xmm1
 
-        # calculate current pixel index
+        # calculate current pixel index - channel
         lea rdx, [r8 + rsi]
+        sub rdx, r15
 
-        # calculate index - bytesPerLine (upper row)
+        # calculate index - channel - bytesPerLine (upper row)
         mov rax, rdx
         sub rax, r13
 
         # load 4 bytes into 4 dwords
         # top left
-        pmovzxbd xmm0, dword ptr [rax - 1]
+        pmovzxbd xmm0, dword ptr [rax]
         # top center
-        pmovzxbd xmm1, dword ptr [rax]
+        pmovzxbd xmm1, dword ptr [rax + r15]
         # top right
-        pmovzxbd xmm2, dword ptr [rax + 1]
+        pmovzxbd xmm2, dword ptr [rax + r15 * 2]
         # center left
-        pmovzxbd xmm3, dword ptr [rdx - 1]
+        pmovzxbd xmm3, dword ptr [rdx]
         # center right
-        pmovzxbd xmm4, dword ptr [rdx + 1]
+        pmovzxbd xmm4, dword ptr [rdx + r15 * 2]
         # bottom left
-        pmovzxbd xmm5, dword ptr [rdx + r13 - 1]
+        lea rdx, [rdx + r13]
+        pmovzxbd xmm5, dword ptr [rdx]
         # bottom center
-        pmovzxbd xmm6, dword ptr [rdx + r13]
+        pmovzxbd xmm6, dword ptr [rdx + r15]
         # bottom right
-        pmovzxbd xmm7, dword ptr [rdx + r13 + 1]
+        pmovzxbd xmm7, dword ptr [rdx + r15 * 2]
 
         movdqa xmm8, xmm0
         paddd xmm8, xmm1
@@ -162,48 +171,50 @@ heightloop:
         xorps xmm0, xmm0
         xorps xmm1, xmm1
 
-        # calculate current pixel index
+        # calculate current pixel index - channel
         lea rdx, [r8 + rsi]
+        sub rdx, r15
 
-        # calculate index - bytesPerLine (upper row)
+        # calculate index - channel - bytesPerLine (upper row)
         mov rax, rdx
         sub rax, r13
 
         # perform read and addition/substraction
         # top left
-        movzx ecx, byte ptr [rax - 1]
+        movzx ecx, byte ptr [rax]
         
         # top center
-        movzx ebx, byte ptr [rax]
+        movzx ebx, byte ptr [rax + r15]
 
         # top right
-        movzx r12d, byte ptr [rax + 1]
+        movzx r12d, byte ptr [rax + r15 * 2]
 
         add ebx, ecx
         sub ecx, r12d
         add ebx, r12d
 
         # center left
-        movzx eax, byte ptr [rdx - 1]
+        movzx eax, byte ptr [rdx]
 
         # center right
-        movzx r12d, byte ptr [rdx + 1]
+        movzx r12d, byte ptr [rdx + r15 * 2]
 
         add ecx, eax
         sub ecx, r12d
 
         # bottom left
-        movzx eax, byte ptr [rdx + r13 - 1]
+        lea rdx, [rdx + r13]
+        movzx eax, byte ptr [rdx]
 
         # bottom center
-        movzx r12d, byte ptr [rdx + r13]
+        movzx r12d, byte ptr [rdx + r15]
 
         sub ebx, eax
         add ecx, eax
         sub ebx, r12d
 
         # bottom right
-        movzx eax,  byte ptr [rdx + r13 + 1]
+        movzx eax,  byte ptr [rdx + r15 * 2]
         
         sub ebx, eax
         sub ecx, eax
@@ -246,6 +257,7 @@ heightloop:
 
 ret_and_restore_stack:
     # restore stack and return 0
+    pop r15
     pop r14
     pop r13
     pop r12

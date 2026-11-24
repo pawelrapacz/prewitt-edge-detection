@@ -43,11 +43,12 @@ ASMIMPL_CHECK_OFFSET(outBytesPerLine,   24);
 ASMIMPL_CHECK_OFFSET(amount,            32);
 ASMIMPL_CHECK_OFFSET(width,             40);
 ASMIMPL_CHECK_OFFSET(height,            48);
-ASMIMPL_CHECK_OFFSET(start,             56);
-ASMIMPL_CHECK_OFFSET(end,               64);
+ASMIMPL_CHECK_OFFSET(fmt,               56);
+ASMIMPL_CHECK_OFFSET(start,             64);
+ASMIMPL_CHECK_OFFSET(end,               72);
 
 // check the size
-static_assert(sizeof(ASMIMPL_CHECKED_STRUCT) == 72,
+static_assert(sizeof(ASMIMPL_CHECKED_STRUCT) == 80,
 "Size of detect_edges_params has changed! Update asmimpl includes.");    
 
 

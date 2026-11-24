@@ -41,7 +41,7 @@
 extern "C" {
 #endif
 
-ASMIMPL_API uint8_t* asmDetectEdges(size_t width, size_t height, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine);
+ASMIMPL_API uint8_t* asmDetectEdges(size_t width, size_t height, Format fmt, const uint8_t* input, size_t bytesPerLine, double amount, size_t* outBytesPerLine);
 
 ASMIMPL_API int asmDetectEdgesWorker(detect_edges_params* params);
 

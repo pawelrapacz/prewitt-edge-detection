@@ -20,6 +20,8 @@ include detect_edges_params_offsets.inc
 
 .code
 
+; int asmDetectEdgesWorker(detect_edges_params* params);
+; ptr in rcx
 asmDetectEdgesWorker proc
     mov r8, qword ptr [rcx + PARAM_INPUT]
     cmp r8, 0       ; check if input not nullptr
@@ -44,17 +46,24 @@ asmDetectEdgesWorker proc
     cmp r11, qword ptr [rcx + PARAM_END]    ; end row
     jnb ret_no_cleanup
 
-    ; check 1 < width - 1
-    sub r10, 1 ; width - 1 in r10
-    cmp r10, 1
-    jbe ret_no_cleanup
-
     ; save stack
     push rbx
     push r12
     push r13
-    push rsi
+    push r15
     push rdi
+    push rsi
+
+    mov r15, qword ptr [rcx + PARAM_FMT] ; channels in r15
+    
+    ; check 1 < (width - 1) * channels
+    mov rax, r10
+    sub rax, 1 ; width - 1 in r10
+    mul r15
+    cmp rax, 1
+    jbe ret_and_restore_stack
+
+    mov r10, rax
 
     mov r13, qword ptr [rcx + PARAM_IN_BPL]
 
@@ -73,55 +82,57 @@ asmDetectEdgesWorker proc
     lea r9, [r9 + rax]  ; out address in r8
 
 heightloop:
-    mov rsi, 1  ; start inside loop
+    mov rsi, r15 ; start from channel to omit the first pixel
 
     widthloop:
         ; break false dependency
         xorps xmm0, xmm0
         xorps xmm1, xmm1
 
-        ; calculate current pixel index
+        ; calculate current pixel index - channel
         lea rdx, [r8 + rsi]
+        sub rdx, r15
 
-        ; calculate index - bytesPerLine (upper row)
+        ; calculate index - channel - bytesPerLine (upper row)
         mov rax, rdx
         sub rax, r13
 
         ; perform read and addition/substraction
         ; top left
-        movzx edi, byte ptr [rax - 1]
+        movzx edi, byte ptr [rax]
         
         ; top center
-        movzx ebx, byte ptr [rax]
+        movzx ebx, byte ptr [rax + r15]
 
         ; top right
-        movzx r12d, byte ptr [rax + 1]
+        movzx r12d, byte ptr [rax + r15 * 2]
 
         add ebx, edi
         sub edi, r12d
         add ebx, r12d
 
         ; center left
-        movzx eax, byte ptr [rdx - 1]
+        movzx eax, byte ptr [rdx]
 
         ; center right
-        movzx r12d, byte ptr [rdx + 1]
+        movzx r12d, byte ptr [rdx + r15 * 2]
 
         add edi, eax
         sub edi, r12d
 
         ; bottom left
-        movzx eax, byte ptr [rdx + r13 - 1]
+        lea rdx, [rdx + r13]
+        movzx eax, byte ptr [rdx]
 
         ; bottom center
-        movzx r12d, byte ptr [rdx + r13]
+        movzx r12d, byte ptr [rdx + r15]
 
         sub ebx, eax
         add edi, eax
         sub ebx, r12d
 
         ; bottom right
-        movzx eax,  byte ptr [rdx + r13 + 1]
+        movzx eax,  byte ptr [rdx + r15 * 2]
         
         sub ebx, eax
         sub edi, eax
@@ -149,7 +160,7 @@ heightloop:
 
         ; widthloop increment and condition check
         inc rsi
-        cmp rsi, r10    ; rsi < width - 1
+        cmp rsi, r10    ; rsi < (width - 1) * channels
         jb widthloop
 
     ; increment output and input pointers to the next row
@@ -164,8 +175,9 @@ heightloop:
 
 ret_and_restore_stack:
     ; restore stack and return 0
-    pop rdi
     pop rsi
+    pop rdi
+    pop r15
     pop r13
     pop r12
     pop rbx

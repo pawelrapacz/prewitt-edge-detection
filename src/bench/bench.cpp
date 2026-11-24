@@ -41,9 +41,9 @@ void bench::bench(std::string_view path, std::string_view label, uint32_t runs, 
     std::call_once(once, QImageReader::setAllocationLimit, 1024); // 1024 MB
 
     QImage image(path.data());
-    image.convertTo(QImage::Format_Grayscale8);
+    image.convertTo(QImage::Format_RGB888);
 
-    if (image.isNull() || image.format() != QImage::Format_Grayscale8)
+    if (image.isNull() || image.format() != QImage::Format_RGB888)
         throw std::runtime_error("invalid image");
     
     const auto width = image.width();
@@ -61,7 +61,7 @@ void bench::bench(std::string_view path, std::string_view label, uint32_t runs, 
 
                 uint8_t* output;
                 auto time = bench::measureTime([&] {
-                    output = detectEdgesThreads(width, height, GRAY, input, bpl, 1., nullptr, w.worker, thrd);
+                    output = detectEdgesThreads(width, height, RGB, input, bpl, 1., nullptr, w.worker, thrd);
                 });
 
                 if (output == nullptr)

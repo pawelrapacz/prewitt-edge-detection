@@ -25,6 +25,7 @@
 #include <asmimpl.h>
 #include <cimpl.h>
 
+#include <qimage.h>
 #include <utility>
 
 #include <QLabel>
@@ -39,6 +40,9 @@
 #include <QSpinBox>
 #include <QResizeEvent>
 #include <QElapsedTimer>
+#include <QFuture>
+#include <QFutureWatcher>
+#include <QtConcurrent/QtConcurrent>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow{parent}, _ui(new Ui::MainWindow)
@@ -68,6 +72,7 @@ void MainWindow::loadImage(const QString &path) {
         return;
 
     _inputImage = QImage(path);
+    _inputImage.convertTo(QImage::Format_RGB888);
     
     if (_inputImage.isNull()) {
         QMessageBox::warning(this, "Image not loaded", "Failed to load image:\n" + path);
@@ -105,6 +110,9 @@ void MainWindow::loadImageFromDialog() {
 
 
 void MainWindow::startEdgeDetcetion() {
+    if (_processing)
+        return;
+
     if (_inputImage.isNull()) {
         QMessageBox::information(this, "Image not loaded", "To start edge detection first choose a file.");
         return;
@@ -118,10 +126,7 @@ void MainWindow::startEdgeDetcetion() {
     else // c implementation
         worker = cDetectEdgesWorker;
         
-    const int width = _inputImage.width();
-    const int height = _inputImage.height();
     const int threads = _ui->threadCountBox->value();
-
     if (threads < 1 || threads > 64) {
         QMessageBox::warning(this, "Invalid value", "Thread count can be set from 1 to 64.");
         return;
@@ -133,36 +138,59 @@ void MainWindow::startEdgeDetcetion() {
         return;
     }
 
-    size_t bytesPerLine {};
-    // const QImage gray = _inputImage.convertToFormat(QImage::Format_Grayscale8);
-    const QImage gray = _inputImage.convertToFormat(QImage::Format_RGB888);
-        
+    bool isRGB = _ui->rgbCheckBox->isChecked();
+    QImage::Format qfmt = isRGB ? QImage::Format_RGB888 : QImage::Format_Grayscale8;
+    Format fmt = isRGB ? RGB : GRAY;
+    
+    _processing = true;
+    _srcImage = _inputImage.convertToFormat(qfmt);
     _timer.start();
-        
-    uint8_t* output = detectEdgesThreads(width, height, RGB, gray.constBits(), gray.bytesPerLine(), amount, &bytesPerLine, worker, threads);
 
+    QFuture<DetectResult> future = QtConcurrent::run([=, this] -> DetectResult {
+        DetectResult res;
+        res.width = _srcImage.width();
+        res.height = _srcImage.height();
+        res.fmt = qfmt;
+        res.output = detectEdgesThreads(res.width, res.height, fmt, this->_srcImage.constBits(),
+                                        this->_srcImage.bytesPerLine(), amount, &res.bytesPerLine, worker, threads);
+        return res;
+    });
+
+
+    _watcher = new QFutureWatcher<DetectResult>(this);
+    connect(_watcher, &QFutureWatcher<uint8_t*>::finished,
+            this, &MainWindow::edgeDetectionFinished);
+    _watcher->setFuture(future);
+}
+
+void MainWindow::edgeDetectionFinished() {
     auto timeNs = _timer.nsecsElapsed();
     _ui->time->setText(
         QString("%1").arg(timeNs / 1e6, 0, 'f', 3)
     );
 
-    QImage processed(
-        output,
-        width,
-        height,
-        bytesPerLine,
-        QImage::Format_RGB888,
+    _srcImage = {};
+    auto res = _watcher->result();
+    _watcher->deleteLater();
+    _watcher = nullptr;
+    _processing = false;
+    _ui->startBtn->setEnabled(true);
+
+    _resultImage = QImage(
+        res.output,
+        res.width,
+        res.height,
+        res.bytesPerLine,
+        res.fmt,
         imageBufferFree,
-        output
+        res.output
     );
 
-    if (processed.isNull()) {
-        imageBufferFree(output); // free if image construction failed
+    if (_resultImage.isNull()) {
+        imageBufferFree(res.output); // free if image construction failed
         QMessageBox::critical(this, "Image not processed", "An error occured.\nFailed to process the image.");
-    } else {
-        _resultImage = std::move(processed);
-        drawImage(_resultImage, *(_ui->resultImageLabel));
     }
+    drawImage(_resultImage, *(_ui->resultImageLabel));
 }
 
 void MainWindow::saveImage() {
@@ -181,7 +209,9 @@ void MainWindow::saveImage() {
 }
 
 void MainWindow::drawImage(const QImage& image, QLabel& label) {
-    if (!image.isNull()) {
+    if (image.isNull()) {
+        label.clear();
+    } else {
         label.setPixmap(QPixmap::fromImage(image).scaled(
             label.size(),
             Qt::KeepAspectRatio,

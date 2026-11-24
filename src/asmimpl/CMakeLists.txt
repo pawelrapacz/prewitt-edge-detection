@@ -9,6 +9,7 @@ add_library(asmimpl SHARED
     >
 
     $<$<PLATFORM_ID:Windows>:
+        windows/detect_edges_params_offsets.inc
         windows/asmimpl.def
         windows/asmDetectEdges.asm
         windows/asmDetectEdgesWorker.asm

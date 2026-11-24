@@ -44,14 +44,16 @@ typedef struct {
     uint8_t r, g, b;
 } rgb_t;
 
-typedef struct {
-    const uint8_t* input;
-    uint8_t* output;
-    size_t inBytesPerLine;
-    size_t outBytesPerLine;
-    double amount;
-    size_t width, height;
-    size_t start, end;
+typedef struct {            // offset
+    const uint8_t* input;   //  0
+    uint8_t* output;        //  8
+    size_t inBytesPerLine;  // 16
+    size_t outBytesPerLine; // 24
+    double amount;          // 32
+    size_t width;           // 40
+    size_t height;          // 48
+    size_t start;           // 56
+    size_t end;             // 64
 } detect_edges_params;
 
 typedef int (*detect_edges_worker)(detect_edges_params*);

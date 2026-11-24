@@ -30,6 +30,8 @@
     #define ASMIMPL_API __attribute__((visibility("default")))
 #endif
 
+#include "core_contract.h"
+
 #include <core.h>
 
 #include <stddef.h>

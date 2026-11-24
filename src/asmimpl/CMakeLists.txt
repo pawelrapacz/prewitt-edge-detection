@@ -1,5 +1,7 @@
 add_library(asmimpl SHARED
     asmimpl.h
+    core_contract.h
+    contract_check.c
     
     $<$<PLATFORM_ID:Linux>:
         linux/detect_edges_params_offsets.inc

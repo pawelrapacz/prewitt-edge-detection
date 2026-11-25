@@ -40,10 +40,19 @@ extern "C" {
 #define CORE_WORKER_SUCCESS  0
 #define CORE_WORKER_FAIL    -1
 
-typedef enum : size_t {
-    GRAY    = 1,
-    RGB     = 3
-} Format;
+#ifdef _MSC_VER
+    typedef size_t Format;
+
+    enum {
+        GRAY    = 1,
+        RGB     = 3
+    };
+#else
+    typedef enum : size_t {
+        GRAY    = 1,
+        RGB     = 3
+    } Format;
+#endif
 
 typedef struct {            // offset
     const uint8_t* input;   //  0

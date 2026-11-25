@@ -25,7 +25,6 @@
 #include <QResizeEvent>
 #include <QElapsedTimer>
 #include <QFutureWatcher>
-#include <qfuturewatcher.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

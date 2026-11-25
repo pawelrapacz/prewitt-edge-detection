@@ -187,6 +187,7 @@ void MainWindow::edgeDetectionFinished() {
         imageBufferFree(res.output); // free if image construction failed
         QMessageBox::critical(this, "Image not processed", "An error occured.\nFailed to process the image.");
     }
+
     drawImage(_resultImage, *(_ui->resultImageLabel));
 }
 
@@ -206,9 +207,7 @@ void MainWindow::saveImage() {
 }
 
 void MainWindow::drawImage(const QImage& image, QLabel& label) {
-    if (image.isNull()) {
-        label.clear();
-    } else {
+    if (!image.isNull()) {
         label.setPixmap(QPixmap::fromImage(image).scaled(
             label.size(),
             Qt::KeepAspectRatio,

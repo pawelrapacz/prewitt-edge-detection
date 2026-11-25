@@ -24,6 +24,7 @@
 #include <string>
 #include <string_view>
 #include <cstdio>
+#include <format>
 #include <print>
 
 #include <QImageReader>
@@ -44,7 +45,7 @@ void bench::bench(std::string_view path, std::string_view label, uint32_t runs, 
     image.convertTo(QImage::Format_RGB888);
 
     if (image.isNull() || image.format() != QImage::Format_RGB888)
-        throw std::runtime_error("invalid image");
+        throw std::runtime_error(std::format("Image \"{}\" invalid or not loaded properly: {}", label, path));
     
     const auto width = image.width();
     const auto height = image.height();

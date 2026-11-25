@@ -22,13 +22,14 @@
 #include <asmimpl.h>
 
 #include <print>
-#include <exception>
 #include <fstream>
+#include <filesystem>
+#include <stdexcept>
 
-int main() {
+int main(int argc, char** argv) {
     const bench::threads_array threads = {1, 2, 4, 8, 16, 32, 64};
     const bench::workers_array workers = {
-        // {"ASM x64 Scalar implementation", asmDetectEdgesWorker},
+        {"ASM x64 Scalar implementation", asmDetectEdgesWorker},
         {"ASM x64 SIMD implementation", asmDetectEdgesSIMDWorker},
         {"C implementation", cDetectEdgesWorker},
     };
@@ -40,14 +41,21 @@ int main() {
         bench::bench("./img/small.jpg", "small", runs, threads, workers, csv);
         bench::bench("./img/medium.jpg", "medium", runs, threads, workers, csv);
         bench::bench("./img/large.jpg", "large", runs, threads, workers, csv);
+
+        std::filesystem::path path = "bench.csv";
+        if (argc > 1)
+            path = argv[1];
+
+        std::ofstream file(path);
+        if (file.is_open())
+            file << csv.text;
+        else
+            throw std::runtime_error("Failed to create file: " + path.string());
+
     } catch (std::exception &e) {
         std::println("An error occured what(): {}", e.what());
         return 1;
     }
-
-    std::ofstream file("bench.csv");
-    if (file.is_open())
-        file << csv.text;
 
     return 0;
 }

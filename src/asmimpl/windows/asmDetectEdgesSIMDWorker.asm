@@ -47,6 +47,11 @@ asmDetectEdgesSIMDWorker proc
     jnb ret_no_cleanup
 
     ; save stack
+    sub rsp, 72
+    movaps XMMWORD PTR [rsp+0],  xmm6
+    movaps XMMWORD PTR [rsp+16], xmm7
+    movaps XMMWORD PTR [rsp+32], xmm8
+    movaps XMMWORD PTR [rsp+48], xmm9
     push rbx
     push r12
     push r13
@@ -261,6 +266,11 @@ ret_and_restore_stack:
     pop r13
     pop r12
     pop rbx
+    movaps xmm6, XMMWORD PTR [rsp+0]
+    movaps xmm7, XMMWORD PTR [rsp+16]
+    movaps xmm8, XMMWORD PTR [rsp+32]
+    movaps xmm9, XMMWORD PTR [rsp+48]
+    add rsp, 72
 ret_no_cleanup:
     xor eax, eax
     ret

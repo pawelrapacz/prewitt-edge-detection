@@ -34,11 +34,16 @@ uint8_t* imageBufferAlloc(size_t width, size_t height, Format fmt, size_t* bpl) 
 }
 
 uint8_t* alignedImageBufferAlloc(size_t width, size_t height, Format fmt, size_t dataAlign, size_t addrAlign, size_t* bpl) {
-    if (width == 0 || height == 0 ||dataAlign == 0 || addrAlign == 0 || bpl == NULL)
+    if (width == 0 || height == 0 || dataAlign == 0 || addrAlign == 0 || bpl == NULL)
         return NULL;
 
+    if (dataAlign % addrAlign != 0)
+        return NULL;
 
-    if (width > (SIZE_MAX / fmt - dataAlign + 1))
+    if (fmt != GRAY && fmt != RGB)
+        return NULL;
+
+    if (width > (SIZE_MAX - dataAlign + 1) / fmt)
         return NULL;
 
     const size_t _bpl = (width * fmt + dataAlign - 1) / dataAlign * dataAlign;
@@ -46,7 +51,7 @@ uint8_t* alignedImageBufferAlloc(size_t width, size_t height, Format fmt, size_t
     if (_bpl > (SIZE_MAX - addrAlign + 1) / height)
         return NULL;
 
-   const size_t size = (_bpl * height + addrAlign - 1) / addrAlign * addrAlign;
+   const size_t size = _bpl * height;
     
 #ifdef _WIN32
     void* ptr = _aligned_malloc(size, addrAlign);

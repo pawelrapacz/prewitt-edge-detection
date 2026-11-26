@@ -56,11 +56,11 @@ asmDetectEdgesWorker proc
 
     mov r15, qword ptr [rcx + PARAM_FMT] ; channels in r15
     
-    ; check 1 < (width - 1) * channels
+    ; check channels < (width - 1) * channels
     mov rax, r10
     sub rax, 1 ; width - 1 in r10
     mul r15
-    cmp rax, 1
+    cmp rax, r15
     jbe ret_and_restore_stack
 
     mov r10, rax

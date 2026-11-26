@@ -47,6 +47,7 @@ add_executable(tests
     tests_main.cpp
     prewitt_impl.h
     core_tests.cpp
+    known_value_tests.cpp
     reference_tests.cpp
 )
 

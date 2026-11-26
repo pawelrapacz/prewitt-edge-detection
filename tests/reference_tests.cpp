@@ -16,10 +16,9 @@
  *      Created GUI app and benchmark with core functionality.
  */
 
-#include "prewitt_impl.h"
-
 #include <doctest/doctest.h>
 
+#include "prewitt_impl.h"
 #include <core.h>
 
 #include <cstdint>

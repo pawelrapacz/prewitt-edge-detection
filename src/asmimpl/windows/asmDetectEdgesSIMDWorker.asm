@@ -71,9 +71,16 @@ asmDetectEdgesSIMDWorker proc
 
     mov r10, rax
 
-    ; (width - 1) * 3 - 4 in r14
+    ; calculate proper bound for SIMD instructions (widthloop)
+    ; r14 = (width - 1) * channels
     mov r14, r10
-    sub r14, 3
+    ; r14 = r15 - channels
+    sub r14, r15
+    ; rbx = r14 % 4
+    mov rbx, r14
+    and rbx, 3  ; and 3 to get modulo 4
+    ; r14 = r14 - rbx  which is the bound
+    sub r14, rbx
 
     mov r13, qword ptr [rcx + PARAM_IN_BPL]
 
@@ -97,7 +104,7 @@ heightloop:
     mov rsi, r15 ; start from channel to omit the first pixel
 
     widthloop:
-        cmp rsi, r14    ; rsi < width * 3 - 4
+        cmp rsi, r14    ; rsi < bound
         jae leftover
 
         ; break false dependency

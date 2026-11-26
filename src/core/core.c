@@ -88,7 +88,7 @@ uint8_t* detectEdges(size_t width, size_t height, Format fmt, const uint8_t* inp
     if (width * height == 0) return NULL;
 
     size_t obpl;
-    uint8_t* output = imageBufferAlloc(width, height, 1, &obpl);
+    uint8_t* output = imageBufferAlloc(width, height, fmt, &obpl);
 
     if (output == NULL) return NULL;
 

@@ -46,7 +46,7 @@ void checkWithReference(std::function<PrewittResult(const QImage&, size_t*)> pre
     REQUIRE(fs::is_directory(expectdir));
 
     auto fileCount = std::ranges::count_if(fs::directory_iterator(expectdir),
-        [](const auto& entry) { return entry.is_regular_file(); });
+        [](const auto& entry) { return entry.is_regular_file() && entry.path().extension() == EXT; });
     REQUIRE(fileCount > 0);
 
     for (const auto& entry : fs::directory_iterator(expectdir)) {
@@ -57,7 +57,7 @@ void checkWithReference(std::function<PrewittResult(const QImage&, size_t*)> pre
 
         SUBCASE(entry.path().filename().string()) {
             const fs::path inputp = inputdir / entry.path().filename();
-            REQUIRE(fs::exists(inputp));
+            REQUIRE(fs::is_regular_file(inputp));
 
             const QImage img = loadImage(inputp);
             const QImage expected = loadImage(entry.path());

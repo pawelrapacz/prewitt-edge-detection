@@ -4,47 +4,29 @@
     "configurePresets": [
         {
             "name": "default",
-            "displayName": "Default",
+            "displayName": "Enables all configurations and testing.",
             "generator": "Ninja Multi-Config",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_CONFIGURATION_TYPES": "Debug;Release;MinSizeRel"
+                "CMAKE_CONFIGURATION_TYPES": "Debug;Release;MinSizeRel",
+                "BUILD_TESTS": "ON"
             }
         },
         {
-            "name": "san-gcc",
-            "hidden": true,
+            "name": "asan",
+            "displayName": "AddressSanitizer + UndefinedBehaviorSanitizer (gcc only)",
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "gcc",
                 "CMAKE_CXX_COMPILER": "g++",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "OFF"
-            }
-        },
-        {
-            "name": "asan",
-            "displayName": "AddressSanitizer + UndefinedBehaviorSanitizer with gcc",
-            "inherits": "san-gcc",
-            "cacheVariables": {
-                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,leak,undefined",
-                "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,leak,undefined",
-                "CMAKE_MODULE_LINKER_FLAGS": "-fsanitize=address,leak,undefined",
-                "CMAKE_C_FLAGS": "-fsanitize=address,leak,undefined -fno-omit-frame-pointer",
-                "CMAKE_CXX_FLAGS": "-fsanitize=address,leak,undefined -fno-omit-frame-pointer"
-            }
-        },
-        {
-            "name": "tsan",
-            "displayName": "ThreadSanitizer with gcc",
-            "inherits": "san-gcc",
-            "cacheVariables": {
-                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=thread",
-                "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=thread",
-                "CMAKE_MODULE_LINKER_FLAGS": "-fsanitize=thread",
-                "CMAKE_C_FLAGS": "-fsanitize=thread",
-                "CMAKE_CXX_FLAGS": "-fsanitize=thread"
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "OFF",
+                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined",
+                "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,undefined",
+                "CMAKE_MODULE_LINKER_FLAGS": "-fsanitize=address,undefined",
+                "CMAKE_C_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+                "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer"
             }
         }
     ],
@@ -55,37 +37,61 @@
             "jobs": 0
         },
         {
-            "name": "debug",
-            "displayName": "Default Debug",
+            "name": "default",
+            "hidden": true,
             "inherits": "parallel",
-            "configuration": "Debug",
             "configurePreset": "default"
+        },
+        {
+            "name": "debug",
+            "displayName": "Build default Debug",
+            "inherits": "default",
+            "configuration": "Debug"
+        },
+        {
+            "name": "all",
+            "displayName": "Build all targets and tests in Debug configuration",
+            "inherits": "debug",
+            "targets": ["all", "tests"]
         },
         {
             "name": "release",
-            "displayName": "Default Release",
-            "inherits": "parallel",
-            "configuration": "Release",
-            "configurePreset": "default"
+            "displayName": "Build default Release",
+            "inherits": "default",
+            "configuration": "Release"
         },
         {
             "name": "minsizerel",
-            "displayName": "Default MinSizeRel",
-            "inherits": "parallel",
-            "configuration": "MinSizeRel",
-            "configurePreset": "default"
+            "displayName": "Build default MinSizeRel",
+            "inherits": "default",
+            "configuration": "MinSizeRel"
+        },
+        {
+            "name": "tests",
+            "displayName": "Build tests",
+            "inherits": "default",
+            "configuration": "Debug",
+            "targets": "tests"
         },
         {
             "name": "asan",
             "displayName": "AddressSanitizer + UndefinedBehaviorSanitizer with gcc",
             "inherits": "parallel",
             "configurePreset": "asan"
-        },
+        }
+    ],
+    "testPresets": [
         {
-            "name": "tsan",
-            "displayName": "ThreadSanitizer with gcc",
-            "inherits": "parallel",
-            "configurePreset": "tsan"
+            "name": "all",
+            "displayName": "Run all tests",
+            "configurePreset": "default",
+            "configuration": "Debug",
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "jobs": 0
+            }
         }
     ]
 }

@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.31)
 project(prewitt-edge-detection LANGUAGES CXX C)
 
+# Project configuration options
+option(BUILD_TESTS "Enables the building of tests" OFF)
+
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     enable_language(ASM)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -17,6 +21,8 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(VISIBILITY_INLINES_HIDDEN ON)
@@ -28,8 +34,30 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
 qt_standard_project_setup()
 
+# fetch deps
+include(FetchContent)
+
 add_subdirectory(src/core)
 add_subdirectory(src/cimpl)
 add_subdirectory(src/asmimpl)
 add_subdirectory(src/app)
 add_subdirectory(src/bench)
+
+
+if (BUILD_TESTS)
+    # install doctest
+    set(DOCTEST_VERSION 2.5.3)
+    FetchContent_Declare(
+        doctest
+        GIT_REPOSITORY https://github.com/doctest/doctest.git
+        GIT_TAG v${DOCTEST_VERSION}
+        GIT_SHALLOW TRUE
+        FIND_PACKAGE_ARGS ${DOCTEST_VERSION}
+    )
+    FetchContent_MakeAvailable(doctest)
+
+    include("${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake")
+
+    enable_testing()
+    add_subdirectory(tests EXCLUDE_FROM_ALL)
+endif()

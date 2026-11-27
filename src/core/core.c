@@ -141,7 +141,16 @@ uint8_t* detectEdgesThreads(size_t width, size_t height, Format fmt, const uint8
         free(thrd);
         return NULL;
     }
+    
+    const uint32_t processableRows = height > 2 ? height - 2 : 0;
+    if (processableRows == 0) {
+        return output;
+    }
 
+    if (threads > processableRows)
+        threads = processableRows;
+
+    bool fail = false;
     uint32_t created = 0;
     for (uint32_t i = 0; i < threads; i++) {
         params[i].input = input;
@@ -155,6 +164,7 @@ uint8_t* detectEdgesThreads(size_t width, size_t height, Format fmt, const uint8
         params[i].start = height * i / threads;
         params[i].end = height * (i + 1) / threads;
 
+        // top and bottom rows are ommited
         if (i == 0) params[i].start++;
         if (i == threads - 1) params[i].end--;
 
@@ -162,13 +172,14 @@ uint8_t* detectEdgesThreads(size_t width, size_t height, Format fmt, const uint8
         wparams[i].worker_params = &params[i];
 
         const int status = thrd_create(&thrd[i], workerWrapper, &wparams[i]);
-        if (status != thrd_success)
+        if (status != thrd_success) {
+            fail = true;
             break;
-        else
+        } else {
             created++;
+        }
     }
 
-    bool fail = false;
     for (uint32_t i = 0; i < created; i++) {
         int res;
         const int status = thrd_join(thrd[i], &res);

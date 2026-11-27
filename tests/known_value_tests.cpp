@@ -24,39 +24,81 @@
 
 template<size_t Height, size_t Width>
 void checkGray(const TestImage<Height, Width>& in, const TestImage<Height, Width>& expect, detect_edges_worker worker) {
-    size_t bpl;
-    auto ptr = detectEdges(
-        in.width(),
-        in.height(),
-        GRAY,
-        in.data(),
-        in.bpl(),
-        TESTS_AMOUNT,
-        &bpl,
-        worker
-    );
-    REQUIRE(ptr);
-    CHECK(expect.equals(ptr, bpl));
-    imageBufferFree(ptr);
+    SUBCASE("sigle thread") {
+        size_t bpl;
+        auto ptr = detectEdges(
+            in.width(),
+            in.height(),
+            GRAY,
+            in.data(),
+            in.bpl(),
+            TESTS_AMOUNT,
+            &bpl,
+            worker
+        );
+        REQUIRE(ptr);
+        CHECK(expect.equals(ptr, bpl));
+        imageBufferFree(ptr);
+    }
+
+    SUBCASE("multi thread") {
+        uint32_t threads = GENERATE(1, 2, 3, 4, 7, 8, 16, 21, 32, 55, 64);
+        size_t bpl;
+        auto ptr = detectEdgesThreads(
+            in.width(),
+            in.height(),
+            GRAY,
+            in.data(),
+            in.bpl(),
+            TESTS_AMOUNT,
+            &bpl,
+            worker,
+            threads
+        );
+        REQUIRE(ptr);
+        CHECK(expect.equals(ptr, bpl));
+        imageBufferFree(ptr);
+    }
 }
 
 template<size_t Height, size_t Width>
     requires (Width % RGB == 0)
 void checkRGB(const TestImage<Height, Width>& in, const TestImage<Height, Width>& expect, detect_edges_worker worker) {
-    size_t bpl;
-    auto ptr = detectEdges(
-        in.width() / 3,
-        in.height(),
-        RGB,
-        in.data(),
-        in.bpl(),
-        TESTS_AMOUNT,
-        &bpl,
-        worker
-    );
-    REQUIRE(ptr);
-    CHECK(expect.equals(ptr, bpl));
-    imageBufferFree(ptr);
+    SUBCASE("sigle thread") {
+        size_t bpl;
+        auto ptr = detectEdges(
+            in.width() / 3,
+            in.height(),
+            RGB,
+            in.data(),
+            in.bpl(),
+            TESTS_AMOUNT,
+            &bpl,
+            worker
+        );
+        REQUIRE(ptr);
+        CHECK(expect.equals(ptr, bpl));
+        imageBufferFree(ptr);
+    }
+
+    SUBCASE("multi thread") {
+        uint32_t threads = GENERATE(1, 2, 3, 4, 7, 8, 16, 21, 32, 55, 64);
+        size_t bpl;
+        auto ptr = detectEdgesThreads(
+            in.width() / 3,
+            in.height(),
+            RGB,
+            in.data(),
+            in.bpl(),
+            TESTS_AMOUNT,
+            &bpl,
+            worker,
+            threads
+        );
+        REQUIRE(ptr);
+        CHECK(expect.equals(ptr, bpl));
+        imageBufferFree(ptr);
+    }
 }
 
 

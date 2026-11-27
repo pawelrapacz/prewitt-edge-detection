@@ -27,6 +27,8 @@
 #include <string_view>
 #include <format>
 #include <functional>
+#include <utility>
+#include <filesystem>
 
 namespace bench {
 
@@ -53,6 +55,8 @@ namespace bench {
     void bench(std::string_view path, std::string_view label, uint32_t runs, const threads_array& threads, const bench::workers_array& workers, bench::csv& csv);
 
     ms_t measureTime(std::function<void()> f);
+
+    std::pair<std::vector<std::filesystem::path>, std::filesystem::path> parse(int argc, char** argv);
 
     class progress {
     public:

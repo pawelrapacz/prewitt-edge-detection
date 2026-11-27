@@ -23,9 +23,12 @@
 
 #include <print>
 #include <fstream>
-#include <filesystem>
 #include <stdexcept>
 
+// Usage:
+// bench [input dir] [output]
+// input dir - directory containing image files to bench (bmp, png, jpg)
+// output - file to save the results
 int main(int argc, char** argv) {
     const bench::threads_array threads = {1, 2, 4, 8, 16, 32, 64};
     const bench::workers_array workers = {
@@ -34,23 +37,21 @@ int main(int argc, char** argv) {
         {"C implementation", cDetectEdgesWorker},
     };
 
-    bench::csv csv;
-    uint32_t runs = 10;
-
     try {
-        bench::bench("./img/small.jpg", "small", runs, threads, workers, csv);
-        bench::bench("./img/medium.jpg", "medium", runs, threads, workers, csv);
-        bench::bench("./img/large.jpg", "large", runs, threads, workers, csv);
+        bench::csv csv;
+        uint32_t runs = 10;
 
-        std::filesystem::path path = "bench.csv";
-        if (argc > 1)
-            path = argv[1];
+        const auto [in, out] = bench::parse(argc, argv);
 
-        std::ofstream file(path);
+        for (const auto& img : in) {
+            bench::bench(img.string(), img.stem().string(), runs, threads, workers, csv);
+        }
+
+        std::ofstream file(out);
         if (file.is_open())
             file << csv.text;
         else
-            throw std::runtime_error("Failed to create file: " + path.string());
+            throw std::runtime_error("Failed to create file: " + out.string());
 
     } catch (std::exception &e) {
         std::println("An error occured what(): {}", e.what());

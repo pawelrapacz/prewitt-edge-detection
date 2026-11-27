@@ -21,14 +21,21 @@
 #include <core.h>
 
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <cstdio>
 #include <format>
+#include <vector>
+#include <filesystem>
+#include <unordered_set>
+#include <utility>
 #include <print>
 
 #include <QImageReader>
 #include <QImage>
+
+namespace fs = std::filesystem;
 
 bench::ms_t bench::measureTime(std::function<void()> f) {
     auto start = std::chrono::high_resolution_clock::now();
@@ -112,4 +119,35 @@ void bench::progress::operator++() {
 
 void bench::progress::operator++(int) {
     operator++();
+}
+
+
+std::pair<std::vector<fs::path>, fs::path> bench::parse(int argc, char** argv) {
+    static const std::unordered_set<std::string_view> ext{".bmp", ".png", ".jpg", ".jpeg"};
+    
+    if (argc != 3)
+        throw std::runtime_error("Arguments missing, use:\nbench [input dir] [output]");
+    
+    std::vector<fs::path> images;
+    fs::path imgdir = argv[1];
+    fs::path outfile = argv[2];
+
+    if (!fs::is_directory(imgdir))
+        throw std::runtime_error("Directory not found or does not exist: " + imgdir.string());
+
+    if(fs::exists(outfile) && !fs::is_regular_file(outfile))
+        throw std::runtime_error("Given path already exists and is not a regular file: " + outfile.string());
+
+    for (auto& entry : fs::directory_iterator(imgdir)) {
+        if (
+            entry.is_regular_file() &&
+            ext.contains(entry.path().extension().string())
+        )
+            images.push_back(entry.path());       
+    }
+
+    if (images.empty())
+        throw std::runtime_error("No images were found!");
+
+    return {images, outfile};
 }

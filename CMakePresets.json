@@ -3,12 +3,19 @@
     "version": 10,
     "configurePresets": [
         {
-            "name": "default",
-            "displayName": "Enables all configurations and testing.",
+            "name": "default-no-tests",
+            "displayName": "Enables all configurations without testing.",
             "generator": "Ninja Multi-Config",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_CONFIGURATION_TYPES": "Debug;Release;MinSizeRel",
+                "CMAKE_CONFIGURATION_TYPES": "Debug;Release;MinSizeRel"
+            }
+        },
+        {
+            "name": "default",
+            "displayName": "Enables all configurations and testing.",
+            "inherits": "default-no-tests",
+            "cacheVariables": {
                 "BUILD_TESTS": "ON"
             }
         },
@@ -37,22 +44,45 @@
             "jobs": 0
         },
         {
-            "name": "default",
+            "name": "no-tests",
             "hidden": true,
             "inherits": "parallel",
-            "configurePreset": "default"
+            "configurePreset": "default-no-tests"
         },
         {
-            "name": "debug",
+            "name": "debug-no-tests",
             "displayName": "Build default Debug",
-            "inherits": "default",
+            "inherits": "no-tests",
             "configuration": "Debug"
+        },
+        {
+            "name": "release-no-tests",
+            "displayName": "Build default Release",
+            "inherits": "no-tests",
+            "configuration": "Release"
+        },
+        {
+            "name": "minsizerel-no-tests",
+            "displayName": "Build default MinSizeRel",
+            "inherits": "no-tests",
+            "configuration": "MinSizeRel"
+        },
+        {
+            "name": "default",
+            "inherits": "no-tests",
+            "configurePreset": "default"
         },
         {
             "name": "all",
             "displayName": "Build all targets and tests in Debug configuration",
             "inherits": "debug",
             "targets": ["all", "tests"]
+        },
+        {
+            "name": "debug",
+            "displayName": "Build default Debug",
+            "inherits": "default",
+            "configuration": "Debug"
         },
         {
             "name": "release",
